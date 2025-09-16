@@ -31,6 +31,15 @@ const COLORS = {
   dark: "#0B0B0B",
 };
 
+function TabIcon({ icon, label, active, onPress }) {
+  return (
+    <TouchableOpacity style={s.tabItem} activeOpacity={0.85} onPress={onPress}>
+      <View style={[s.tabIcon, active && s.tabIconActive]}>{icon}</View>
+      <Text style={[s.tabLabel, active && { color: COLORS.text, fontWeight: "600" }]}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
 export default function VRBooking() {
   const router = useRouter();
 
@@ -160,9 +169,33 @@ Total: $${price.toFixed(2)}`,
             </View>
           </TouchableOpacity>
         </View>
-
         <View style={{ height: 80 }} />
       </ScrollView>
+
+      {/* Bottom Nav (visual mock) — screen level so router is in scope */}
+<View style={s.tabbar}>
+        <TabIcon
+          icon={<Ionicons name="home" size={22} color="#666" />}
+          label="Home"
+          onPress={() => router.push("/")}
+        />
+        <TabIcon
+          icon={<Ionicons name="airplane-outline" size={22} color="#666" />}
+          label="Trips"
+          onPress={() => router.push("/Trips")}
+        />
+        <TabIcon
+          icon={<Ionicons name="apps-outline" size={22} color="#666" />}
+          label="Hub"
+          onPress={() => router.push("/Hub")}
+        />
+        <TabIcon
+          icon={<Ionicons name="person-outline" size={22} color="#666" />}
+          label="Profile"
+          onPress={() => router.push("/Profile")}
+        />
+      </View>
+      
     </SafeAreaView>
   );
 }
@@ -377,4 +410,43 @@ const s = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#FFD24D",
   },
+  // tab bar
+  tabbar: {
+    position: "absolute",
+    left: 16,
+    right: 16,
+    bottom: 18,
+    height: 64,
+    backgroundColor: COLORS.panel,
+    borderRadius: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowOffset: { width: 0, height: 10 },
+    shadowRadius: 14,
+    elevation: 10,
+    paddingHorizontal: 10,
+  },
+  tabItem: { alignItems: "center", justifyContent: "center" },
+  tabIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: "#F4F5F8",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tabIconActive: {
+    backgroundColor: COLORS.primarySoft1,
+    borderWidth: 1,
+    borderColor: COLORS.primaryBorder,
+  },
+  tabLabel: { fontSize: 11, color: "#666", marginTop: 4 },
+
+  safe: { flex: 1, backgroundColor: COLORS.bg },
+  container: { padding: 16, paddingBottom: 120 },
 });
