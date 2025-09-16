@@ -132,7 +132,7 @@ export default function Home() {
         <View style={s.panel}>
           <View style={s.sectionHeaderRow}>
             <View style={[s.sectionPip, { backgroundColor: COLORS.primary }]} />
-            <Text style={s.sectionTitle}>What makes V-aiR special</Text>
+            <Text style={s.sectionTitle}>What makes Riyadh Air Special</Text>
           </View>
 
           <ScrollView
