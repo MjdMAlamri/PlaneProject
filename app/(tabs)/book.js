@@ -441,8 +441,7 @@ Estimated from $${estimateTotal}`,
       {/* Bottom Nav (visual mock) — screen level so router is in scope */}
       <View style={s.tabbar}>
         <TabIcon
-          active
-          icon={<Ionicons name="home" size={22} color={COLORS.text} />}
+          icon={<Ionicons name="home" size={22} color="#666" />}
           label="Home"
           onPress={() => router.push("/")}
         />
