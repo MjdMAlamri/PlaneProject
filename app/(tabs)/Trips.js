@@ -92,7 +92,6 @@ export default function Trips() {
                 from={t.from}
                 to={t.to}
                 when={t.when}
-                onPress={() => router.push("/book")}
               />
             ))}
           </View>
@@ -163,7 +162,7 @@ export default function Trips() {
           onPress={() => {}}
         />
         <TabIcon icon={<Ionicons name="apps-outline" size={22} color="#666" />} label="Hub" onPress={() => router.push("/hub")} />
-        <TabIcon icon={<Ionicons name="person-outline" size={22} color="#666" />} label="Profile" onPress={() => router.push("/profile")} />
+        <TabIcon icon={<Ionicons name="person-outline" size={22} color="#666" />} label="Profile" onPress={() => router.push("/Profile")} />
       </View>
     </SafeAreaView>
   );
@@ -179,9 +178,8 @@ function UpcomingTripCard({ code, from, to, when, onPress }) {
           <Ionicons name="swap-horizontal" size={18} color="#6E5DFF" />
         </View>
         <View>
-          <Text style={u.title}>Selected flight</Text>
-          <Text style={u.route}>
-            {code} <Text style={{ color: "#0F172A", fontWeight: "900" }}>{from} → {to}</Text>
+          <Text style={u.title}>Flight Information</Text>
+          <Text style={u.route}>{code} <Text style={{ color: "#0F172A", fontWeight: "700" }}> {"\n"}{from} → {to}</Text>
           </Text>
           <Text style={u.when}>{when}</Text>
         </View>
@@ -311,7 +309,7 @@ const u = StyleSheet.create({
     borderWidth: 1, borderColor: COLORS.primarySoft2,
   },
   title: { fontSize: 12.5, color: COLORS.muted, fontWeight: "700", marginBottom: 2 },
-  route: { fontSize: 14, color: COLORS.text, fontWeight: "800" },
+  route: { fontSize: 14, color: COLORS.text, fontWeight: "900" },
   when: { fontSize: 12, color: COLORS.muted, marginTop: 2 },
 });
 
