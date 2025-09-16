@@ -1,8 +1,8 @@
 // app/profile.js
-// Profile page — colorful world map header with visited/unvisited markers,
+// Profile page — colorful world map header with visited/unvisited chips,
 // badges, favorites, year recap (keeps your Home styling)
 
-import React, { useMemo, useState, useRef } from "react";
+import React, { useMemo, useState } from "react";
 import {
   SafeAreaView,
   ScrollView,
@@ -13,7 +13,6 @@ import {
   TouchableOpacity,
   Dimensions,
   Alert,
-  LayoutChangeEvent,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -37,37 +36,16 @@ const COLORS = {
 };
 
 const MAP_ILLUSTRATION =
-  // Colorful, posterized map aesthetic (swap with your asset anytime)
-  "https://gisgeography.com/wp-content/uploads/2023/01/World-Country-Map.jpg";
+  "/Users/m/Desktop/GDP/LastProject/my-travel-app/assets/MAP2.png";
 const FALLBACK_IMG = "https://placehold.co/1600x900/jpg?text=V-aiR";
 const AVATAR =
   "https://www.womenofinfluence.ca/wp-content/uploads/2021/02/Jessica_ketwaroo_green-1-e1692387031590.png";
 
 const USER = { name: "Najd" };
 
-/** Demo country sets */
+/** Demo country sets (kept for chips only) */
 const VISITED = ["SA", "JP", "FR", "AE", "GE", "TR"];
 const UNVISITED_SUGGEST = ["IT", "PE", "ES"];
-
-/** Rough map marker coordinates (0..1) over the header image.
- *  (Not geo-accurate—just good anchors for the header canvas.)
- */
-const COUNTRY_COORDS = {
-  US: { x: 0.19, y: 0.45 },
-  BR: { x: 0.28, y: 0.70 },
-  PE: { x: 0.27, y: 0.65 },
-  GB: { x: 0.46, y: 0.37 },
-  FR: { x: 0.48, y: 0.40 },
-  ES: { x: 0.47, y: 0.43 },
-  IT: { x: 0.51, y: 0.44 },
-  GE: { x: 0.54, y: 0.40 },
-  TR: { x: 0.56, y: 0.43 },
-  AE: { x: 0.61, y: 0.52 },
-  SA: { x: 0.58, y: 0.55 },
-  IN: { x: 0.69, y: 0.57 },
-  JP: { x: 0.86, y: 0.46 },
-  AU: { x: 0.86, y: 0.78 },
-};
 
 /** Favorites & Badges demo data (same structure as before) */
 const FAVORITES = [
@@ -111,17 +89,6 @@ export default function Profile() {
   const [tab, setTab] = useState("Cities");
   const badges = useMemo(() => BADGE_SETS[tab] ?? [], [tab]);
 
-  // map size for positioning markers
-  const [mapSize, setMapSize] = useState({ w: W - 32, h: 180 });
-
-  const onMapLayout = (e) => {
-    const layout = e?.nativeEvent?.layout;
-    if (!layout) return;
-    const { width, height } = layout;
-    setMapSize({ w: width, h: height });
-  };
-  
-
   return (
     <SafeAreaView style={s.safe}>
       <ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
@@ -137,24 +104,15 @@ export default function Profile() {
           </View>
         </View>
 
-        {/* ===== Colorful World Map Header (like the mug) ===== */}
-        <View style={hdr.wrap} onLayout={onMapLayout}>
+        {/* ===== Static World Map Header (no pins) ===== */}
+        <View style={hdr.wrap}>
           <Image source={{ uri: MAP_ILLUSTRATION }} style={hdr.bg} resizeMode="cover" />
-          {/* keep colors vivid but softened for text legibility */}
           <LinearGradient
             colors={["rgba(255,255,255,0.55)", "rgba(255,255,255,0.25)"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={hdr.tint}
           />
-
-          {/* Map markers — visited colored dots, unvisited grey with + */}
-          {VISITED.map((cc) => (
-            <MapMarker key={cc} cc={cc} visited mapSize={mapSize} />
-          ))}
-          {UNVISITED_SUGGEST.map((cc) => (
-            <MapMarker key={cc} cc={cc} visited={false} mapSize={mapSize} />
-          ))}
 
           {/* Avatar + Name row */}
           <View style={hdr.headerRow}>
@@ -165,21 +123,9 @@ export default function Profile() {
               <Text style={hdr.name}>{USER.name}</Text>
               <Text style={hdr.sub}>Traveler since 2022</Text>
             </View>
-            <TouchableOpacity onPress={() => Alert.alert("Notifications", "Manage travel alerts in Settings.")}>
+            <TouchableOpacity onPress={() => router.push("/notifications")}>
               <Ionicons name="notifications-outline" size={22} color={COLORS.dark} />
             </TouchableOpacity>
-          </View>
-
-          {/* Horizontal chips row (quick add / view) */}
-          <View style={hdr.chipsRow}>
-            <ScrollRow>
-              {VISITED.map((cc) => (
-                <CountryChip key={cc} code={cc} visited />
-              ))}
-              {UNVISITED_SUGGEST.map((cc) => (
-                <CountryChip key={cc} code={cc} visited={false} />
-              ))}
-            </ScrollRow>
           </View>
         </View>
 
@@ -202,42 +148,6 @@ export default function Profile() {
               />
             ))}
           </ScrollRow>
-        </View>
-
-        {/* ===== Year Recap (Home-style gradient card) ===== */}
-        <View style={s.panel}>
-          <View style={s.sectionHeaderRow}>
-            <View style={[s.sectionPip, { backgroundColor: COLORS.primary }]} />
-            <Text style={s.sectionTitle}>2024 Year Recap</Text>
-          </View>
-
-          <LinearGradient
-            colors={["#A855F7","#A855F7"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={recap.wrap}
-          >
-            <Text style={recap.title}>Your Epic Year!</Text>
-
-            <View style={recap.grid}>
-              <RecapStat big label="Miles Traveled" value="28,540" />
-              <RecapStat big label="Countries Visited" value="8" />
-              <RecapStat label="Cities Explored" value="24" />
-              <RecapStat label="Badges Earned" value="47" />
-            </View>
-
-            <Text style={recap.line}>
-              <Text style={{ fontWeight: "800" }}>Favorite Destination:</Text> Tokyo, Japan
-            </Text>
-            <Text style={recap.line}>
-              <Text style={{ fontWeight: "800" }}>Longest Adventure:</Text> 14 days in Southeast Asia
-            </Text>
-
-            <TouchableOpacity activeOpacity={0.9} style={recap.cta} onPress={() => Alert.alert("Share", "Shared to your feed!")}>
-              <Text style={recap.ctaTxt}>Share Your Recap</Text>
-              <Ionicons name="arrow-forward" size={16} color="#fff" />
-            </TouchableOpacity>
-          </LinearGradient>
         </View>
 
         {/* ===== Badges (Cities / Games / Challenges) ===== */}
@@ -280,7 +190,45 @@ export default function Profile() {
           </View>
         </View>
 
-        <View style={{ height: 120 }} />
+        {/* ===== Year Recap (Home-style gradient card) ===== */}
+        <View style={s.panel}>
+          <View style={s.sectionHeaderRow}>
+            <View style={[s.sectionPip, { backgroundColor: COLORS.primary }]} />
+            <Text style={s.sectionTitle}>2024 Year Recap</Text>
+          </View>
+
+          <LinearGradient
+            colors={["#A855F7", "#A855F7"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={recap.wrap}
+          >
+            <Text style={recap.title}>Your Epic Year!</Text>
+
+            <View style={recap.grid}>
+              <RecapStat big label="Miles Traveled" value="28,540" />
+              <RecapStat big label="Countries Visited" value="8" />
+              <RecapStat label="Cities Explored" value="24" />
+              <RecapStat label="Badges Earned" value="47" />
+            </View>
+
+            <Text style={recap.line}>
+              <Text style={{ fontWeight: "800" }}>Favorite Destination:</Text> Tokyo, Japan
+            </Text>
+            <Text style={recap.line}>
+              <Text style={{ fontWeight: "800" }}>Longest Adventure:</Text> 14 days in Southeast Asia
+            </Text>
+
+            <TouchableOpacity
+              activeOpacity={0.9}
+              style={recap.cta}
+              onPress={() => Alert.alert("Share", "Shared to your feed!")}
+            >
+              <Text style={recap.ctaTxt}>Share Your Recap</Text>
+              <Ionicons name="arrow-forward" size={16} color="#fff" />
+            </TouchableOpacity>
+          </LinearGradient>
+        </View>
       </ScrollView>
 
       {/* Bottom Nav — Profile active */}
@@ -292,42 +240,10 @@ export default function Profile() {
           active
           icon={<Ionicons name="person-outline" size={22} color={COLORS.text} />}
           label="Profile"
-          onPress={() => {}}
+          onPress={() => router.push("/Profile")}
         />
       </View>
     </SafeAreaView>
-  );
-}
-
-/* ===== Map marker over the header image ===== */
-function MapMarker({ cc, visited, mapSize }) {
-  const pos = COUNTRY_COORDS[cc] || { x: 0.5, y: 0.5 };
-  const size = 14;
-  const left = pos.x * mapSize.w - size / 2;
-  const top = pos.y * mapSize.h - size / 2;
-
-  return (
-    <TouchableOpacity
-      activeOpacity={0.9}
-      onPress={() =>
-        visited ? Alert.alert("Visited", `${cc} already in your map`) : Alert.alert("Add Country", `Add ${cc}`)
-      }
-      style={[
-        mrk.wrap,
-        {
-          left,
-          top,
-          backgroundColor: visited ? COLORS.primary : "#E9ECF3",
-          borderColor: visited ? "#FFFFFF" : "#D8DDE8",
-        },
-      ]}
-    >
-      {visited ? (
-        <View style={mrk.innerDot} />
-      ) : (
-        <Ionicons name="add" size={10} color="#7A8197" />
-      )}
-    </TouchableOpacity>
   );
 }
 
@@ -487,7 +403,7 @@ const s = StyleSheet.create({
   tabLabel: { fontSize: 11, color: "#666", marginTop: 4 },
 });
 
-/* Map header */
+/* Map header (static image only) */
 const hdr = StyleSheet.create({
   wrap: {
     borderRadius: 16,
@@ -549,29 +465,6 @@ const chips = StyleSheet.create({
     width: 16, height: 16, borderRadius: 8,
     backgroundColor: "#fff", borderWidth: 1, borderColor: COLORS.border,
     alignItems: "center", justifyContent: "center", marginLeft: 6,
-  },
-});
-
-/* On-map markers */
-const mrk = StyleSheet.create({
-  wrap: {
-    position: "absolute",
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    borderWidth: 2,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  innerDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "#fff",
   },
 });
 
@@ -679,4 +572,4 @@ const br = StyleSheet.create({
     opacity: 0.8,
   },
   previewTxt: { color: "#fff", fontSize: 10, fontWeight: "800" },
-});
+});s
