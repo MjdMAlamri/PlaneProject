@@ -1,12 +1,10 @@
 // app/(tabs)/hub.js
-// Hub — Activities feed with polished UX, filters/sort sheets,
-// gradient legibility, skeletons, fallback images, and SAME bottom nav.
-// If your (tabs)/_layout already renders a Tab bar, comment out the local tabbar at the bottom to avoid two bars.
+// Hub — Activities feed with filters/sort visible ONLY on Activities tab.
+// Adds country flag emoji to each card. Bottom nav present; Hub highlighted.
 
 import React, { useMemo, useRef, useState, useCallback } from "react";
 import {
   SafeAreaView,
-  ScrollView,
   View,
   Text,
   StyleSheet,
@@ -21,7 +19,6 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
-/** Theme to match your app */
 const COLORS = {
   bg: "#F6F7FB",
   text: "#0F172A",
@@ -38,7 +35,7 @@ const COLORS = {
 
 const FALLBACK_IMG = "https://placehold.co/1200x800/jpg?text=V-aiR";
 
-/** Demo data */
+// Demo data
 const DATA = [
   {
     id: "tokyo-teamlab",
@@ -88,19 +85,29 @@ const sorters = {
   rating_asc: (a, b) => a.rating - b.rating,
 };
 
+// simple country → emoji
+const flagEmoji = (country) =>
+  (
+    {
+      Japan: "🇯🇵",
+      "Saudi Arabia": "🇸🇦",
+      Georgia: "🇬🇪",
+      Oman: "🇴🇲",
+      UAE: "🇦🇪",
+      Qatar: "🇶🇦",
+    }[country] || "🏳️"
+  );
+
 export default function HubActivities() {
   const router = useRouter();
 
   const [items, setItems] = useState(DATA);
-
-  // filter & sort states
-  const [availability, setAvailability] = useState(null); // "available" | "full" | null
-  const [minRating, setMinRating] = useState(null); // 1..5 | null
-  const [typeFilter, setTypeFilter] = useState(null); // "solo" | "group" | null
+  const [availability, setAvailability] = useState(null);
+  const [minRating, setMinRating] = useState(null);
+  const [typeFilter, setTypeFilter] = useState(null);
   const [sortBy, setSortBy] = useState("recommended");
   const [activeTab, setActiveTab] = useState("Activities");
 
-  // sheet toggles
   const [showFilter, setShowFilter] = useState(false);
   const [showSort, setShowSort] = useState(false);
 
@@ -137,7 +144,7 @@ export default function HubActivities() {
 
   const keyExtractor = useCallback((it) => it.id, []);
   const getItemLayout = useCallback((_, index) => {
-    const H = 196; // card + gap
+    const H = 196;
     return { length: H, offset: H * index, index };
   }, []);
 
@@ -164,7 +171,6 @@ export default function HubActivities() {
 
     return (
       <View style={styles.card} accessible accessibilityLabel={`${item.title}. ${item.city}, ${item.country}. Rating ${item.rating}.`}>
-        {/* Image */}
         <Image
           source={{ uri: imgErr ? FALLBACK_IMG : item.image }}
           style={styles.cardImage}
@@ -173,30 +179,15 @@ export default function HubActivities() {
         />
         {!imgOk && <Skeleton />}
 
-        {/* gradient for legibility */}
-        <View style={styles.gradBottom} />
-
-        {/* top overlay: type + add to plan */}
         <View style={styles.cardTopRow}>
           <View style={styles.typePill}>
-            <Text style={styles.typePillText}>
-              {item.type === "solo" ? "Solo" : "Group"}
-            </Text>
+            <Text style={styles.typePillText}>{item.type === "solo" ? "Solo" : "Group"}</Text>
           </View>
-
           <TouchableOpacity
             onPress={() => onAddToPlan(item.id)}
             activeOpacity={0.9}
-            style={[
-              styles.signupBtn,
-              spotsLeft(item) <= 0 && { opacity: 0.6 },
-            ]}
+            style={[styles.signupBtn, spotsLeft(item) <= 0 && { opacity: 0.6 }]}
             disabled={spotsLeft(item) <= 0}
-            accessibilityLabel={
-              spotsLeft(item) > 0
-                ? `Add to Plan. ${item.booked} of ${item.capacity} taken`
-                : "Full"
-            }
           >
             <Text style={styles.signupText}>
               {item.booked}/{item.capacity} | {spotsLeft(item) > 0 ? "Add to Plan" : "Full"}
@@ -204,7 +195,6 @@ export default function HubActivities() {
           </TouchableOpacity>
         </View>
 
-        {/* bottom overlay: title, location, rating */}
         <View style={styles.cardBottom}>
           <Text numberOfLines={2} style={styles.cardTitle}>
             {item.title}
@@ -212,7 +202,7 @@ export default function HubActivities() {
           <View style={styles.locationRow}>
             <Ionicons name="location-outline" size={14} color="#fff" />
             <Text style={styles.locationText}>
-              {item.city}, {item.country}
+              {flagEmoji(item.country)} {item.city}, {item.country}
             </Text>
           </View>
           {renderStars(item.rating)}
@@ -223,15 +213,14 @@ export default function HubActivities() {
 
   const Header = (
     <>
-      {/* App bar (brand) */}
-      <View style={[appbar, appbarEdge]}>
+      {/* App bar with Riyadh Air logo */}
+      <View style={[styles.appbar, styles.appbarEdge]}>
         <Image
-            source={require("../../assets/images/Riyadh_Air_Logo.png")} // adjust path per file
-            style={s.brandLogo}
-            resizeMode="contain"
-            accessibilityLabel="Riyadh Air"
+          source={require("../../assets/images/Riyadh_Air_Logo.png")}
+          style={styles.brandLogo}
+          resizeMode="contain"
+          accessibilityLabel="Riyadh Air"
         />
-
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           <TouchableOpacity
             style={styles.bell}
@@ -250,70 +239,63 @@ export default function HubActivities() {
         </View>
       </View>
 
-      {/* Title row + icons */}
-      <View style={styles.headerRow}>
-        <Text style={styles.h1}>Hub</Text>
+      {/* Segmented tabs + (conditional) filter/sort on the right */}
+      <View style={styles.segHeaderRow}>
         <View style={{ flexDirection: "row", gap: 8 }}>
-          <View>
+          <View style={[styles.seg, styles.segActive]}>
+            <Text style={[styles.segTxt, { color: "#fff" }]}>Activities</Text>
+          </View>
+          <TouchableOpacity style={[styles.seg, styles.segInactive]} onPress={() => router.push("/game")}>
+            <Text style={styles.segTxt}>In-flight games</Text>
+          </TouchableOpacity>
+        </View>
+
+        {activeTab === "Activities" && (
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            <View>
+              <TouchableOpacity
+                onPress={() => {
+                  setShowSort(false);
+                  setShowFilter((v) => !v);
+                }}
+                style={styles.iconBtn}
+              >
+                <Ionicons name="filter-outline" size={18} color={COLORS.text} />
+              </TouchableOpacity>
+              {filterActiveCount > 0 && (
+                <View style={styles.dotBadge}>
+                  <Text style={styles.dotTxt}>{filterActiveCount}</Text>
+                </View>
+              )}
+            </View>
             <TouchableOpacity
               onPress={() => {
-                setShowSort(false);
-                setShowFilter((v) => !v);
+                setShowFilter(false);
+                setShowSort((v) => !v);
               }}
               style={styles.iconBtn}
             >
-              <Ionicons name="filter-outline" size={18} color={COLORS.text} />
+              <Ionicons name="swap-vertical-outline" size={18} color={COLORS.text} />
             </TouchableOpacity>
-            {filterActiveCount > 0 && (
-              <View style={styles.dotBadge}>
-                <Text style={styles.dotTxt}>{filterActiveCount}</Text>
-              </View>
-            )}
           </View>
-          <TouchableOpacity
-            onPress={() => {
-              setShowFilter(false);
-              setShowSort((v) => !v);
-            }}
-            style={styles.iconBtn}
-          >
-            <Ionicons name="swap-vertical-outline" size={18} color={COLORS.text} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Segmented tabs */}
-      <View style={styles.segments}>
-        <Segment
-          label="Activities"
-          active={activeTab === "Activities"}
-          onPress={() => setActiveTab("Activities")}
-        />
-        <Segment
-          label="In-flight games"
-          active={activeTab === "In-flight games"}
-          onPress={() => router.push("/game")}
-        />
+        )}
       </View>
 
       {/* Country label */}
       <Text style={styles.country}>Japan</Text>
 
-      {/* Panel start */}
-      <View style={[styles.panel, { paddingTop: 10, paddingBottom: 6, marginBottom: 12 }]}>
-        {/* will host the list below */}
-      </View>
+      {/* Spacer panel for visual rhythm */}
+      <View style={[styles.panel, { paddingTop: 10, paddingBottom: 6, marginBottom: 12 }]} />
     </>
   );
 
   return (
     <SafeAreaView style={styles.safe}>
-      {/* Main scroll (FlatList for perf) with header above */}
       <FlatList
         data={filtered}
         keyExtractor={keyExtractor}
         renderItem={({ item }) => <ActivityCard item={item} />}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 140, paddingTop: 0, gap: 12 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 140, gap: 12 }}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={Header}
         ListEmptyComponent={
@@ -352,9 +334,7 @@ export default function HubActivities() {
               <Chip
                 label="Available"
                 active={availability === "available"}
-                onPress={() =>
-                  setAvailability((v) => (v === "available" ? null : "available"))
-                }
+                onPress={() => setAvailability((v) => (v === "available" ? null : "available"))}
               />
               <Chip
                 label="Full"
@@ -397,21 +377,9 @@ export default function HubActivities() {
         <Pressable style={styles.sheetOverlay} onPress={() => setShowSort(false)}>
           <Pressable style={styles.sheet}>
             <Text style={styles.sheetTitle}>Sort by</Text>
-            <SortRow
-              label="Rating: Low → High"
-              active={sortBy === "rating_asc"}
-              onPress={() => setSortBy("rating_asc")}
-            />
-            <SortRow
-              label="Rating: High → Low"
-              active={sortBy === "rating_desc"}
-              onPress={() => setSortBy("rating_desc")}
-            />
-            <SortRow
-              label="Recommended"
-              active={sortBy === "recommended"}
-              onPress={() => setSortBy("recommended")}
-            />
+            <SortRow label="Rating: Low → High" active={sortBy === "rating_asc"} onPress={() => setSortBy("rating_asc")} />
+            <SortRow label="Rating: High → Low" active={sortBy === "rating_desc"} onPress={() => setSortBy("rating_desc")} />
+            <SortRow label="Recommended" active={sortBy === "recommended"} onPress={() => setSortBy("recommended")} />
           </Pressable>
         </Pressable>
       )}
@@ -419,49 +387,24 @@ export default function HubActivities() {
       {/* Toast */}
       <Toast.Slot />
 
-      {/* Bottom Nav — same as other pages; Hub highlighted */}
+      {/* Bottom Nav — same as others; Hub highlighted */}
       <View style={styles.tabbar}>
         <TabIcon icon={<Ionicons name="home" size={22} color="#666" />} label="Home" onPress={() => router.push("/index")} />
         <TabIcon icon={<Ionicons name="airplane-outline" size={22} color="#666" />} label="Trips" onPress={() => router.push("/Trips")} />
-        <TabIcon
-          active
-          icon={<Ionicons name="apps-outline" size={22} color={COLORS.text} />}
-          label="Hub"
-          onPress={() => {}}
-        />
+        <TabIcon active icon={<Ionicons name="apps-outline" size={22} color={COLORS.text} />} label="Hub" onPress={() => {}} />
         <TabIcon icon={<Ionicons name="person-outline" size={22} color="#666" />} label="Profile" onPress={() => router.push("/profile")} />
       </View>
     </SafeAreaView>
   );
 }
 
-/* — small components — */
-
-function Segment({ label, active, onPress }) {
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      hitSlop={10}
-      activeOpacity={0.9}
-      style={[
-        styles.seg,
-        active ? styles.segActive : styles.segInactive,
-      ]}
-    >
-      <Text style={[styles.segTxt, active && { color: "#fff" }]}>{label}</Text>
-    </TouchableOpacity>
-  );
-}
-
+/* — small UI helpers — */
 function Chip({ label, active, onPress }) {
   return (
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.9}
-      style={[
-        styles.chip,
-        active && { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
-      ]}
+      style={[styles.chip, active && { backgroundColor: COLORS.primary, borderColor: COLORS.primary }]}
     >
       <Text style={[styles.chipText, active && { color: "#fff" }]}>{label}</Text>
     </TouchableOpacity>
@@ -486,17 +429,13 @@ function TabIcon({ icon, label, active, onPress }) {
   );
 }
 
-/* Skeleton shimmer for images */
+/* Skeleton shimmer */
 function Skeleton() {
   const x = useRef(new Animated.Value(-1)).current;
   React.useEffect(() => {
-    Animated.loop(
-      Animated.timing(x, { toValue: 1, duration: 1300, easing: Easing.inOut(Easing.quad), useNativeDriver: true })
-    ).start();
+    Animated.loop(Animated.timing(x, { toValue: 1, duration: 1300, easing: Easing.inOut(Easing.quad), useNativeDriver: true })).start();
   }, [x]);
-
   const translateX = x.interpolate({ inputRange: [-1, 1], outputRange: [-160, 160] });
-
   return (
     <View style={styles.skelWrap}>
       <Animated.View style={[styles.skelShine, { transform: [{ translateX }] }]} />
@@ -524,7 +463,6 @@ const Toast = {
     };
     api.current.show = show;
     Toast.ref = api;
-
     return (
       <Animated.View pointerEvents="none" style={[styles.toast, { opacity }]}>
         <Text style={styles.toastTxt}>{text}</Text>
@@ -533,32 +471,19 @@ const Toast = {
   },
 };
 
-/* — styles — */
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
-  container: { padding: 16, paddingBottom: 130 },
 
+  // App bar
   appbar: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
     paddingTop: 6,
     marginBottom: 8,
   },
-
-  brandLogo: {
-  height: 42,
-  width: 240,
-  marginLeft: -60,  // tweak -6 to -14 depending on the file
-  },
-
-  appbarEdge: {
-  marginHorizontal: 0,   // cancels ScrollView's 16 padding
-  paddingHorizontal: 0,   // keeps the internal spacing consistent
-  },
-
-  brand: { fontSize: 24, fontWeight: "800", color: COLORS.text },
+  appbarEdge: { marginHorizontal: 0, paddingHorizontal: 0 },
+  brandLogo: { height: 42, width: 240, marginLeft: -60 },
   bell: {
     width: 36, height: 36, borderRadius: 12,
     backgroundColor: "#F1F2F6",
@@ -566,25 +491,16 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: "#EBEDF3",
   },
 
-  headerRow: {
+  // Segments row with optional controls on right
+  segHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
-    marginBottom: 6,
+    paddingRight: 2,
+    paddingLeft: 0,
+    marginBottom: 8,
   },
-  h1: { fontSize: 18, fontWeight: "800", color: COLORS.text },
-
-  segments: {
-    flexDirection: "row",
-    gap: 8,
-    paddingHorizontal: 16,
-    marginBottom: 10,
-  },
-  seg: {
-    paddingHorizontal: 12, paddingVertical: 8,
-    borderRadius: 999, borderWidth: 1,
-  },
+  seg: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, borderWidth: 1 },
   segInactive: { backgroundColor: "#fff", borderColor: COLORS.primaryBorder },
   segActive: { backgroundColor: COLORS.text, borderColor: COLORS.text },
   segTxt: { fontSize: 13, fontWeight: "800", color: COLORS.text },
@@ -603,13 +519,7 @@ const styles = StyleSheet.create({
   },
   dotTxt: { color: "#fff", fontSize: 10, fontWeight: "800" },
 
-  country: {
-    marginLeft: 16,
-    marginBottom: 8,
-    color: COLORS.text,
-    fontSize: 16,
-    fontWeight: "800",
-  },
+  country: { marginLeft: 0, marginBottom: 8, color: COLORS.text, fontSize: 16, fontWeight: "800" },
 
   panel: {
     backgroundColor: COLORS.panel,
@@ -642,13 +552,7 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   sheetTitle: { fontSize: 16, fontWeight: "800", color: COLORS.text, marginBottom: 8 },
-  sheetSection: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: COLORS.muted,
-    marginTop: 8,
-    marginBottom: 4,
-  },
+  sheetSection: { fontSize: 12, fontWeight: "800", color: COLORS.muted, marginTop: 8, marginBottom: 4 },
   rowWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
 
   chip: {
@@ -661,12 +565,7 @@ const styles = StyleSheet.create({
   },
   chipText: { color: COLORS.text, fontWeight: "800", fontSize: 12 },
 
-  sortRow: {
-    paddingVertical: 10,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
+  sortRow: { paddingVertical: 10, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   sortLabel: { color: COLORS.text, fontWeight: "800" },
 
   /* Cards */
@@ -680,12 +579,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   cardImage: { ...StyleSheet.absoluteFillObject, width: "100%", height: "100%" },
-  gradBottom: {
-    position: "absolute",
-    left: 0, right: 0, bottom: 0, height: 100,
-    backgroundColor: "transparent",
-    // fallback gradient using layered views
-  },
   cardTopRow: {
     position: "absolute",
     top: 10,
@@ -705,7 +598,6 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primaryBorder,
   },
   typePillText: { color: COLORS.text, fontWeight: "800", fontSize: 12 },
-
   signupBtn: {
     backgroundColor: "rgba(255,255,255,0.92)",
     borderColor: COLORS.primaryBorder,
@@ -716,25 +608,13 @@ const styles = StyleSheet.create({
   },
   signupText: { color: COLORS.text, fontWeight: "800", fontSize: 12 },
 
-  cardBottom: {
-    position: "absolute",
-    left: 12,
-    right: 12,
-    bottom: 10,
-    zIndex: 2,
-  },
+  cardBottom: { position: "absolute", left: 12, right: 12, bottom: 10, zIndex: 2 },
   cardTitle: { color: "#FFF", fontWeight: "900", fontSize: 16, marginBottom: 6 },
   locationRow: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 6 },
   locationText: { color: "#FFF", fontWeight: "700" },
   ratingText: {
-    color: "#FFF",
-    fontWeight: "800",
-    marginLeft: 6,
-    backgroundColor: "rgba(0,0,0,0.25)",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-    overflow: "hidden",
+    color: "#FFF", fontWeight: "800", marginLeft: 6,
+    backgroundColor: "rgba(0,0,0,0.25)", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, overflow: "hidden",
   },
 
   clearBtn: {
@@ -749,33 +629,14 @@ const styles = StyleSheet.create({
   clearTxt: { color: COLORS.text, fontWeight: "800" },
 
   // Toast
-  toast: {
-    position: "absolute",
-    bottom: 96,
-    alignSelf: "center",
-    backgroundColor: "#0F172A",
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
+  toast: { position: "absolute", bottom: 96, alignSelf: "center", backgroundColor: "#0F172A", borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 },
   toastTxt: { color: "#fff", fontWeight: "800" },
 
   // Skeleton
-  skelWrap: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "#EDEFF5",
-    overflow: "hidden",
-  },
-  skelShine: {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
-    width: 160,
-    backgroundColor: "rgba(255,255,255,0.7)",
-    opacity: 0.5,
-  },
+  skelWrap: { ...StyleSheet.absoluteFillObject, backgroundColor: "#EDEFF5", overflow: "hidden" },
+  skelShine: { position: "absolute", top: 0, bottom: 0, width: 160, backgroundColor: "rgba(255,255,255,0.7)", opacity: 0.5 },
 
-  // bottom tab bar (same as others)
+  // Bottom nav (same as others)
   tabbar: {
     position: "absolute",
     left: 16, right: 16, bottom: 18, height: 64,
