@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+
 import {
   SafeAreaView,
   ScrollView,
@@ -44,6 +45,8 @@ const NEXT_TRIP_BG =
 const NEXT_TRIP_BG_FALLBACK = "https://placehold.co/1600x900/jpg?text=Next+Trip";
 const FALLBACK_IMG = "https://placehold.co/1600x900/jpg?text=V-aiR";
 
+
+
 export default function Home() {
   const router = useRouter();
 
@@ -70,10 +73,16 @@ export default function Home() {
     <SafeAreaView style={s.safe}>
       <ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
         {/* Top App Bar */}
-        <View style={s.appbar}>
-          <Text style={s.brand}>
-            Riyadh V-aiR<Text style={{ color: COLORS.primary }}>.</Text>
-          </Text>
+
+        <View style={[s.appbar, s.appbarEdge]}>
+          <Image
+            source={require("../../assets/images/Riyadh_Air_Logo.png")}
+            style={s.brandLogo}
+            resizeMode="contain"
+            accessibilityLabel="Riyadh Air"
+          />
+
+          {/* right-side icons... */}
           <TouchableOpacity
             activeOpacity={0.7}
             style={s.bell}
@@ -498,6 +507,19 @@ const s = StyleSheet.create({
     shadowRadius: 10,
     elevation: 2,
   },
+  
+  brandLogo: {
+  height: 42,
+  width: 240,
+  marginLeft: -60,  // tweak -6 to -14 depending on the file
+  },
+
+  appbarEdge: {
+  marginHorizontal: 0,   // cancels ScrollView's 16 padding
+  paddingHorizontal: 0,   // keeps the internal spacing consistent
+  },
+
+
 
   sectionHeaderRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 10 },
   headerRowIcon: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 10 },
