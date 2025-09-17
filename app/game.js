@@ -5,14 +5,13 @@ import {
   View,
   Text,
   StyleSheet,
-  Image,
   TouchableOpacity,
-  Alert,
+  Image,
   ScrollView,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
-import BillboardCarousel from "./components/BillboardCarousel"; // NOTE path: app -> app/components
+import { Ionicons } from "@expo/vector-icons";
+import BillboardCarousel from "./components/BillboardCarousel"; // app -> app/components
 
 const COLORS = {
   bg: "#F6F7FB",
@@ -20,120 +19,104 @@ const COLORS = {
   muted: "#5B667A",
   border: "#E4E7EE",
   panel: "#FFFFFF",
+  primary: "#6E5DFF",
+  primarySoft1: "#EEF0FF",
   primaryBorder: "#DADFFE",
+  accent: "#FFCE31",
 };
 
-const FEATURED_GAMES = [
+const GAMES = [
   {
     id: "sudoku",
     title: "Sudoku",
     subtitle: "Number puzzles",
     image:
-      "https://images.unsplash.com/photo-1519974719765-e6559eac2575?q=80&w=1600&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1545235617-9465d2a55698?q=80&w=1600&auto=format&fit=crop",
   },
   {
     id: "chess",
     title: "Chess",
     subtitle: "Solo or 2-player",
     image:
-      "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?q=80&w=1600&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1519981593452-666cf05569a9?q=80&w=1600&auto=format&fit=crop",
   },
   {
-    id: "trivia",
-    title: "Trivia Quiz",
-    subtitle: "Quick fun rounds",
+    id: "solitaire",
+    title: "Solitaire",
+    subtitle: "Classic cards",
     image:
-      "https://images.unsplash.com/photo-1518684079-3c830dcef090?q=80&w=1600&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1518002171953-a080ee817e1e?q=80&w=1600&auto=format&fit=crop",
   },
 ];
 
-export default function GamesScreen() {
+export default function GamePage() {
   const router = useRouter();
 
   return (
-    <SafeAreaView style={s.safe}>
-      {/* hide the default stack header */}
+    <SafeAreaView style={st.safe}>
+      {/* Hide the native header bar */}
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* App bar with logo */}
-      <View style={s.appbar}>
+      {/* App bar */}
+      <View style={st.appbar}>
         <Image
           source={require("../assets/images/Riyadh_Air_Logo.png")}
-          style={s.brandLogo}
+          style={st.brandLogo}
           resizeMode="contain"
           accessibilityLabel="Riyadh Air"
         />
         <View style={{ flexDirection: "row", gap: 8 }}>
-          <TouchableOpacity
-            style={s.bell}
-            onPress={() => Alert.alert("In-flight games", "Quick games you can play offline.")}
-          >
+          <TouchableOpacity style={st.bell}>
             <Ionicons name="information-outline" size={18} color={COLORS.text} />
           </TouchableOpacity>
-          <TouchableOpacity style={s.bell} onPress={() => router.push("/notifications")}>
+          <TouchableOpacity
+            style={st.bell}
+            onPress={() => router.push("/notifications")}
+          >
             <Ionicons name="notifications-outline" size={20} color={COLORS.text} />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* NEW: Featured billboard */}
+      {/* Featured billboard for games */}
       <BillboardCarousel
         type="game"
-        data={FEATURED_GAMES}
-        onPressPrimary={(item) => Alert.alert("Play", `Launching ${item.title}…`)}
+        data={GAMES}
+        onPressPrimary={(g) => console.log("Play", g.id)}
       />
 
-      {/* Segmented switch (no filter/sort here) */}
-      <View style={s.segContainer}>
-        <View style={s.segTrack}>
+      {/* Segmented pill bar (Games active) */}
+      <View style={st.segWrap}>
+        <View style={st.segTrack}>
           <TouchableOpacity
-            onPress={() => router.replace("/(tabs)/hub")}
-            style={[s.segButton]}
+            onPress={() => router.replace("/hub")}
+            style={st.segBtn}
+            activeOpacity={0.9}
           >
-            <Text style={s.segText}>Activities</Text>
+            <Text style={st.segTxt}>Activities</Text>
           </TouchableOpacity>
-          <View style={[s.segButton, s.segButtonActive, s.segRight]}>
-            <Text style={[s.segText, s.segTextActive]}>In-flight games</Text>
+          <View style={[st.segBtn, st.segBtnActive]}>
+            <Text style={[st.segTxt, st.segTxtActive]}>In-flight games</Text>
           </View>
         </View>
-        {/* no tools on the right */}
       </View>
 
       {/* Content */}
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
-        <View style={s.panel}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 }}>
-            <View style={{ width: 6, height: 18, backgroundColor: "#6E5DFF", borderRadius: 4 }} />
-            <Text style={{ fontSize: 16, fontWeight: "800", color: COLORS.text }}>In-flight games</Text>
-          </View>
-
-          {/* Simple grid of cards (placeholders hook to router or Alert) */}
-          <View style={s.grid}>
-            {FEATURED_GAMES.map((g) => (
-              <TouchableOpacity
-                key={g.id}
-                style={s.gameCard}
-                activeOpacity={0.9}
-                onPress={() => Alert.alert("Preview", `Preview ${g.title}`)}
-              >
-                <Image source={{ uri: g.image }} style={s.cardImg} />
-                <View style={s.cardShade} />
-                <Text style={s.cardTitle}>{g.title}</Text>
-                <Text style={s.cardSub}>{g.subtitle}</Text>
-                <View style={s.previewBtn}>
-                  <Text style={s.previewTxt}>Preview</Text>
-                  <Ionicons name="arrow-forward" size={14} color="#fff" />
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+      >
+        <View style={st.panel}>
+          <Text style={st.h2}>In-flight games</Text>
+          {/* …your grid/list of game cards goes here… */}
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-const s = StyleSheet.create({
+/* styles (match other pages) */
+const st = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
 
   appbar: {
@@ -152,27 +135,25 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: "#EBEDF3",
   },
 
-  segContainer: {
-    paddingHorizontal: 16,
-    marginBottom: 10,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 12,
-  },
+  segWrap: { paddingHorizontal: 16, marginTop: 6 },
   segTrack: {
     flexDirection: "row",
     backgroundColor: "#ECEFF5",
     borderRadius: 999,
-    padding: 4,
     borderWidth: 1,
     borderColor: COLORS.primaryBorder,
+    padding: 4,
   },
-  segButton: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 999 },
-  segRight: { marginLeft: 6 },
-  segButtonActive: { backgroundColor: COLORS.text },
-  segText: { fontWeight: "800", color: COLORS.text, fontSize: 13 },
-  segTextActive: { color: "#fff" },
+  segBtn: {
+    flex: 1,
+    height: 38,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  segBtnActive: { backgroundColor: COLORS.text },
+  segTxt: { fontWeight: "800", color: COLORS.text, fontSize: 13 },
+  segTxtActive: { color: "#fff" },
 
   panel: {
     backgroundColor: COLORS.panel,
@@ -186,37 +167,5 @@ const s = StyleSheet.create({
     shadowRadius: 10,
     elevation: 2,
   },
-
-  grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    gap: 12,
-  },
-  gameCard: {
-    width: "48%",
-    height: 160,
-    borderRadius: 16,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: COLORS.primaryBorder,
-    backgroundColor: "#fff",
-  },
-  cardImg: { ...StyleSheet.absoluteFillObject, resizeMode: "cover" },
-  cardShade: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.25)" },
-  cardTitle: { position: "absolute", left: 10, top: 10, color: "#fff", fontWeight: "900" },
-  cardSub: { position: "absolute", left: 10, top: 28, color: "#fff", opacity: 0.9, fontWeight: "700", fontSize: 12 },
-  previewBtn: {
-    position: "absolute",
-    left: 10,
-    bottom: 8,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: 999,
-    backgroundColor: "rgba(255,166,0,0.95)",
-  },
-  previewTxt: { color: "#fff", fontWeight: "900", fontSize: 12 },
+  h2: { fontSize: 16, fontWeight: "800", color: COLORS.text, marginBottom: 8 },
 });
