@@ -38,9 +38,9 @@ const COLORS = {
 };
 
 const USER_NAME = "Daniel";
-const HERO_IMG =
-  // ⬇️ replace with your Riyadh Air airplane hero image (sky+plane)
-  "/Users/m/Desktop/GDP/PlaneProject/my-travel-app/assets/images/Background_img.png";
+const HERO_IMG = require("../../assets/images/Background_img.png");
+//const HERO_IMG = require("/Users/m/Desktop/GDP/PlaneProject/my-travel-app/assets/images/Background_img.png");
+
 const FALLBACK_IMG = "https://placehold.co/1600x900/jpg?text=Riyadh+Air";
 
 const IMG = {
@@ -189,28 +189,15 @@ export default function Home() {
 
 function Hero({ timeLeft, onBell, onPressCamera, useBlur = true }) {
   const [uri, setUri] = useState(HERO_IMG);
-
+  const [failed, setFailed] = useState(false);
   return (
     <View style={h.wrap}>
-      {/* Background sky/plane image (stretched, full-bleed) */}
-      <Image source={{ uri }} onError={() => setUri(FALLBACK_IMG)} style={h.bg} resizeMode="cover" />
-
-      {/* Soft top/bottom gradients for readability but keep the sky visible */}
-      <LinearGradient
-        colors={["rgba(0,0,0,0.15)", "rgba(0,0,0,0)"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 0.35 }}
-        style={StyleSheet.absoluteFill}
-        pointerEvents="none"
+      <Image
+        source={failed ? { uri: FALLBACK_IMG } : HERO_IMG}
+        onError={() => setFailed(true)}
+        style={h.bg}
+        resizeMode="cover"
       />
-      <LinearGradient
-        colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.12)"]}
-        start={{ x: 0, y: 0.6 }}
-        end={{ x: 0, y: 1 }}
-        style={StyleSheet.absoluteFill}
-        pointerEvents="none"
-      />
-
       {/* Top row: bell */}
 <View style={h.topRow}>
   <TouchableOpacity onPress={onBell} activeOpacity={0.8} style={h.bell}>
@@ -502,8 +489,8 @@ const h = StyleSheet.create({
     marginTop: Platform.OS === "ios" ? 6 : 8,
     paddingHorizontal: 16,
     flexDirection: "row",
-    alignItems: "right",
-    justifyContent: "space-between",
+    alignItems: "center",   // or "flex-end" for vertical alignment control
+    justifyContent: "flex-end",
     position: 'absolute',
     top: 12,        // tweak
     right: 16,      // tweak
