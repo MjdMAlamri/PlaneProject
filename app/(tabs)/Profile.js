@@ -35,13 +35,17 @@ const COLORS = {
   dark: "#0B0B0B",
 };
 
+const RECAP_LOGO =
+  "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Riyadh_Air_Logo.svg/2560px-Riyadh_Air_Logo.svg.png";
+
+
 const MAP_ILLUSTRATION =
-  "/Users/m/Desktop/GDP/LastProject/my-travel-app/assets/MAP2.png";
+  "/Users/m/Desktop/GDP/PlaneProject/my-travel-app/assets/images/Map4.png";
 const FALLBACK_IMG = "https://placehold.co/1600x900/jpg?text=V-aiR";
 const AVATAR =
-  "https://www.womenofinfluence.ca/wp-content/uploads/2021/02/Jessica_ketwaroo_green-1-e1692387031590.png";
+  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTOuxrvcNMfGLh73uKP1QqYpKoCB0JLXiBMvA&s";
 
-const USER = { name: "Najd" };
+const USER = { name: "Morgan, Daniel" };
 
 /** Demo country sets (kept for chips only) */
 const VISITED = ["SA", "JP", "FR", "AE", "GE", "TR"];
@@ -80,7 +84,7 @@ const BADGE_SETS = {
   ],
   Challenges: [
     { id: "steps", name: "10k Steps", img: "https://images.unsplash.com/photo-1517963879433-6ad2b056d712?q=80&w=800&auto=format&fit=crop", done: 10, total: 10, pct: 1.0, flag: "🏅" },
-    { id: "photos", name: "100 Photos", img: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?q=80&w=800&auto=format&fit=crop", done: 35, total: 100, pct: 0.35, flag: "📸" },
+    { id: "photos", name: "100 Cities", img: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?q=80&w=800&auto=format&fit=crop", done: 35, total: 100, pct: 0.35, flag: "📸" },
   ],
 };
 
@@ -92,17 +96,26 @@ export default function Profile() {
   return (
     <SafeAreaView style={s.safe}>
       <ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
-        {/* Top App Bar */}
-        <View style={s.appbar}>
-          <Text style={s.brand}>
-            Riyadh V-aiR<Text style={{ color: COLORS.primary }}>.</Text>
-          </Text>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <TouchableOpacity style={s.iconBtn} onPress={() => router.push("/settings")}>
-              <Ionicons name="settings-outline" size={18} color={COLORS.text} />
-            </TouchableOpacity>
-          </View>
+{/* Top App Bar */}
+
+<View style={[s.appbar, s.appbarEdge]}>
+          <Image
+            source={require("../../assets/images/Riyadh_Air_Logo.png")}
+            style={s.brandLogo}
+            resizeMode="contain"
+            accessibilityLabel="Riyadh Air"
+          />
+
+          {/* right-side icons... */}
+          <TouchableOpacity
+            activeOpacity={0.7}
+            style={s.bell}
+            onPress={() => router.push("/notifications")}
+          >
+            <Ionicons name="notifications-outline" size={20} color={COLORS.text} />
+          </TouchableOpacity>
         </View>
+
 
         {/* ===== Static World Map Header (no pins) ===== */}
         <View style={hdr.wrap}>
@@ -123,9 +136,6 @@ export default function Profile() {
               <Text style={hdr.name}>{USER.name}</Text>
               <Text style={hdr.sub}>Traveler since 2022</Text>
             </View>
-            <TouchableOpacity onPress={() => router.push("/notifications")}>
-              <Ionicons name="notifications-outline" size={22} color={COLORS.dark} />
-            </TouchableOpacity>
           </View>
         </View>
 
@@ -144,7 +154,7 @@ export default function Profile() {
                 image={f.image}
                 icon={f.icon}
                 bullets={f.bullets}
-                onPress={() => Alert.alert("Open", `Opening "${f.title}" in VR…`)}
+                onPress={() => Alert.alert("Open", `Opening "${f.title}"…`)}
               />
             ))}
           </ScrollRow>
@@ -153,7 +163,7 @@ export default function Profile() {
         {/* ===== Badges (Cities / Games / Challenges) ===== */}
         <View style={s.panel}>
           <LinearGradient
-            colors={["#A855F7", "#A855F7"]}
+            colors={[COLORS.primarySoft1,COLORS.primarySoft1]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={badgeHdr.wrap}
@@ -198,13 +208,18 @@ export default function Profile() {
           </View>
 
           <LinearGradient
-            colors={["#A855F7", "#A855F7"]}
+            colors={[COLORS.primarySoft1, COLORS.primarySoft1]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={recap.wrap}
           >
+            <Image
+    source={{ uri: RECAP_LOGO }}
+    style={recap.logo}
+    resizeMode="contain"
+    accessibilityLabel="Riyadh Air"
+  />
             <Text style={recap.title}>Your Epic Year!</Text>
-
             <View style={recap.grid}>
               <RecapStat big label="Miles Traveled" value="28,540" />
               <RecapStat big label="Countries Visited" value="8" />
@@ -225,7 +240,7 @@ export default function Profile() {
               onPress={() => Alert.alert("Share", "Shared to your feed!")}
             >
               <Text style={recap.ctaTxt}>Share Your Recap</Text>
-              <Ionicons name="arrow-forward" size={16} color="#fff" />
+              <Ionicons name="arrow-forward" size={16} color="#000" />
             </TouchableOpacity>
           </LinearGradient>
         </View>
@@ -355,6 +370,18 @@ function TabIcon({ icon, label, active, onPress }) {
 /* ===== Styles ===== */
 
 const s = StyleSheet.create({
+
+// app bar
+appbar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 },
+brand: { fontSize: 24, fontWeight: "800", color: COLORS.text },
+bell: { width: 36, height: 36, borderRadius: 12, backgroundColor: "#F1F2F6", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#EBEDF3" },
+brandLogo: {
+height: 42,
+width: 240,
+marginLeft: -60,  // tweak -6 to -14 depending on the file
+},
+
+
   safe: { flex: 1, backgroundColor: COLORS.bg },
   container: { padding: 16, paddingBottom: 130 },
 
@@ -519,13 +546,43 @@ const recap = StyleSheet.create({
     gap: 6,
   },
   ctaTxt: { color: "#fff", fontWeight: "800" },
+  wrap: { borderRadius: 16, padding: 14 },
+  // NEW:
+  logo: {
+    position: "absolute",
+    top: 5,
+    right: 12,
+    width: Math.min(120, W * 0.35), // scales on small phones
+    height: 50,
+    opacity: 0.9,                    // subtle so it blends nicely
+  },
+  title: { color: "#000", fontWeight: "900", fontSize: 18, marginBottom: 8 },
+  grid: { flexDirection: "row", flexWrap: "wrap", gap: 14, marginBottom: 10 },
+  stat: { width: (W - 16 * 2 - 14) / 2 - 4 },
+  value: { color: "#000", fontWeight: "900", fontSize: 22 },
+  label: { color: "#000", fontSize: 12, marginTop: 2 },
+  line: { color: "#000", marginTop: 4 },
+  cta: {
+    marginTop: 10,
+    alignSelf: "flex-start",
+    backgroundColor: "transparent", // no fill
+    borderColor: "#000",
+    borderWidth: 1.5,                // <- required for the border to show
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },  
+  ctaTxt: { color: "#000", fontWeight: "800" },
 });
 
 /* Badge header */
 const badgeHdr = StyleSheet.create({
   wrap: { borderRadius: 12, padding: 12 },
-  title: { color: "#fff", fontWeight: "900", fontSize: 16 },
-  sub: { color: "rgba(255,255,255,0.9)", marginTop: 2, marginBottom: 8, fontSize: 12 },
+  title: { color: "#000", fontWeight: "900", fontSize: 16 },
+  sub: { color: "black", marginTop: 2, marginBottom: 8, fontSize: 12 },
 });
 
 /* Tabs */
@@ -534,7 +591,7 @@ const tabs = StyleSheet.create({
   chip: {
     paddingHorizontal: 12, paddingVertical: 8,
     borderRadius: 999, backgroundColor: "rgba(255,255,255,0.3)",
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.5)",
+    borderWidth: 1, borderColor: "black",
   },
   chipTxt: { color: "#0F172A", fontWeight: "800", fontSize: 12.5 },
   active: { backgroundColor: "#0F172A", borderColor: "#0F172A" },
@@ -572,4 +629,4 @@ const br = StyleSheet.create({
     opacity: 0.8,
   },
   previewTxt: { color: "#fff", fontSize: 10, fontWeight: "800" },
-});s
+});

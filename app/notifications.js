@@ -37,7 +37,7 @@ const DATA = [
 export default function Notifications() {
   const router = useRouter();
 
-  const renderItem = ({ item, index }: any) => (
+  const renderItem = ({ item, index }) => (
     <View>
       {index !== 0 && <View style={s.divider} />}
       <View style={s.row}>
@@ -46,7 +46,7 @@ export default function Notifications() {
       </View>
     </View>
   );
-
+  
   return (
     <SafeAreaView style={s.safe}>
       {/* Panel wrapper like Home */}
@@ -106,7 +106,6 @@ const s = StyleSheet.create({
   sectionHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center", // center the pip + title as a group
     marginBottom: 8,
   },
   sectionPip: {

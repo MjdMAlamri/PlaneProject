@@ -87,30 +87,20 @@ function Divider() {
   return <View style={s.divider} />;
 }
 
-function SettingsRow({
-  icon,
-  label,
-  right,
-  danger,
-  onPress,
-}: {
-  icon: any;
-  label: string;
-  right?: string;
-  danger?: boolean;
-  onPress?: () => void;
-}) {
+function SettingsRow({ icon, label, right, danger, onPress }) {
   return (
     <TouchableOpacity style={s.row} activeOpacity={0.9} onPress={onPress}>
       <View style={s.left}>
         <View style={s.iconWrap}>
           <Ionicons name={icon} size={18} color="#111" />
         </View>
-        <Text style={[s.label, danger && { color: "#B91C1C" }]}>{label}</Text>
+        <Text style={[s.label, danger ? { color: "#B91C1C" } : null]}>
+          {label}
+        </Text>
       </View>
 
       <View style={s.right}>
-        {!!right && <Text style={s.rightText}>{right}</Text>}
+        {right ? <Text style={s.rightText}>{right}</Text> : null}
         <Ionicons
           name="chevron-forward"
           size={18}
@@ -120,6 +110,7 @@ function SettingsRow({
     </TouchableOpacity>
   );
 }
+
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
@@ -141,7 +132,6 @@ const s = StyleSheet.create({
   sectionHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center", // center the pip + title as a group
     marginBottom: 8,
   },
   sectionPip: {

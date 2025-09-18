@@ -12,6 +12,7 @@ import {
   Dimensions,
   Alert,
   Image,
+  Pressable,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -47,34 +48,30 @@ export default function Trips() {
   const router = useRouter();
   const [trips] = useState([
     { id: "1", code: "RYD123", from: "RYD", to: "ULH", when: "Tomorrow 10:20" },
-    { id: "2", code: "RYD123", from: "RYD", to: "ULH", when: "Fri 18:45" },
+    { id: "2", code: "RYD456", from: "RYD", to: "DMM", when: "Fri 18:45" },
   ]);
 
   return (
     <SafeAreaView style={s.safe}>
       <ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
-        {/* Top App Bar (scrolls with page) */}
-        <View style={s.appbar}>
-          <Text style={s.brand}>
-            Riyadh V-aiR<Text style={{ color: COLORS.primary }}>.</Text>
-          </Text>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <TouchableOpacity
-              activeOpacity={0.7}
-              style={s.iconBtn}
-              onPress={() =>
-                Alert.alert(
-                  "Trips",
-                  "See your upcoming flights and quick info about the destination and airport."
-                )
-              }
-            >
-              <Ionicons name="information-outline" size={18} color={COLORS.text} />
-            </TouchableOpacity>
-            <TouchableOpacity activeOpacity={0.7} style={s.iconBtn} onPress={() => router.push("/notifications")}>
-              <Ionicons name="notifications-outline" size={20} color={COLORS.text} />
-            </TouchableOpacity>
-          </View>
+        {/* Top App Bar */}
+
+        <View style={[s.appbar, s.appbarEdge]}>
+          <Image
+            source={require("../../assets/images/Riyadh_Air_Logo.png")}
+            style={s.brandLogo}
+            resizeMode="contain"
+            accessibilityLabel="Riyadh Air"
+          />
+
+          {/* right-side icons... */}
+          <TouchableOpacity
+            activeOpacity={0.7}
+            style={s.bell}
+            onPress={() => router.push("/notifications")}
+          >
+            <Ionicons name="notifications-outline" size={20} color={COLORS.text} />
+          </TouchableOpacity>
         </View>
 
         {/* Title */}
@@ -92,6 +89,9 @@ export default function Trips() {
                 from={t.from}
                 to={t.to}
                 when={t.when}
+                // ✅ string path form, per your preference
+                onPress={() => router.push("/UpT")}
+                // If you later add a dynamic page: onPress={() => router.push(`/trips/${t.id}`)}
               />
             ))}
           </View>
@@ -99,7 +99,7 @@ export default function Trips() {
 
         {/* Info about your next trip (image background cards) */}
         <View style={s.panel}>
-          <Text style={s.sectionTitle}>Info about your next trip:</Text>
+          <Text style={s.sectionTitle}>Informations about your next trip:</Text>
 
           <View style={i.grid}>
             <InfoCardBG
@@ -124,17 +124,7 @@ export default function Trips() {
               ]}
               onPress={() => Alert.alert("City", "A quick history & culture overview")}
             />
-            <InfoCardBG
-              image={IMG.plans}
-              icon="people-outline"
-              title="See other people plans"
-              bullets={[
-                "Community itineraries",
-                "Best-rated spots",
-                "Hidden gems",
-              ]}
-              onPress={() => router.push("/hub")}
-            />
+            
             <InfoCardBG
               image={IMG.tips}
               icon="bulb-outline"
@@ -172,20 +162,23 @@ export default function Trips() {
 
 function UpcomingTripCard({ code, from, to, when, onPress }) {
   return (
-    <TouchableOpacity style={u.card} activeOpacity={0.9} onPress={onPress}>
+    <Pressable
+      onPress={onPress}
+      android_ripple={{ color: "#E4E7EE" }}
+      style={[u.card]}
+    >
       <View style={u.left}>
         <View style={u.iconBox}>
-          <Ionicons name="swap-horizontal" size={18} color="#6E5DFF" />
+          <Ionicons name="airplane-outline" size={16} color={COLORS.text} />
         </View>
-        <View>
-          <Text style={u.title}>Flight Information</Text>
-          <Text style={u.route}>{code} <Text style={{ color: "#0F172A", fontWeight: "700" }}> {"\n"}{from} → {to}</Text>
-          </Text>
+        <View style={{ flexShrink: 1 }}>
+          <Text style={u.title}>{code}</Text>
+          <Text style={u.route}>{from} ➝ {to}</Text>
           <Text style={u.when}>{when}</Text>
         </View>
       </View>
-      <Ionicons name="chevron-forward" size={18} color="#7A8197" />
-    </TouchableOpacity>
+      <Ionicons name="chevron-forward" size={18} color="#9AA4B2" />
+    </Pressable>
   );
 }
 
@@ -247,10 +240,16 @@ const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
   container: { padding: 16, paddingBottom: 130 },
 
-  // App bar
-  appbar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 },
-  brand: { fontSize: 24, fontWeight: "800", color: COLORS.text },
-  iconBtn: {
+  // app bar
+  appbar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  appbarEdge: { paddingHorizontal: 16, paddingTop: 6 }, // you used this in JSX
+  brandLogo: { height: 42, width: 240, marginLeft: -60 },
+  bell: {
     width: 36, height: 36, borderRadius: 12,
     backgroundColor: "#F1F2F6",
     alignItems: "center", justifyContent: "center",
@@ -272,10 +271,10 @@ const s = StyleSheet.create({
     shadowRadius: 10,
     elevation: 2,
   },
-  sectionTitle: { fontSize: 16, fontWeight: "800", color: COLORS.text, marginBottom: 10 },
+  sectionTitle: { fontSize: 15, fontWeight: "800", color: COLORS.text, marginBottom: 10 },
   divider: { height: 1, backgroundColor: "#E7E9FD", marginBottom: 12 },
 
-  // Bottom tab
+  // bottom tab
   tabbar: {
     position: "absolute",
     left: 16, right: 16, bottom: 18, height: 64,
@@ -290,6 +289,7 @@ const s = StyleSheet.create({
   tabIconActive: { backgroundColor: COLORS.primarySoft1, borderWidth: 1, borderColor: COLORS.primaryBorder },
   tabLabel: { fontSize: 11, color: "#666", marginTop: 4 },
 });
+
 
 const u = StyleSheet.create({
   card: {
@@ -313,16 +313,14 @@ const u = StyleSheet.create({
   when: { fontSize: 12, color: COLORS.muted, marginTop: 2 },
 });
 
-const CARD_W = 343
+const CARD_W = W - 32; // full width minus page paddings
+
 const i = StyleSheet.create({
   grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
     gap: 12,
   },
   card: {
-    width: CARD_W,
+    width: 340,
     height: 170,
     borderRadius: 16,
     overflow: "hidden",

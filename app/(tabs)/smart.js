@@ -50,7 +50,7 @@ const DESTS = [
     country: "Saudi Arabia",
     vibe: "nature",
     clima: "mild",
-    img: "https://images.unsplash.com/photo-1602589090422-369f9b7d2d30?q=80&w=2340&auto=format&fit=crop",
+    img: "https://www.arabnews.com/sites/default/files/shorthand/1601001/DMZf8wornc/assets/9NnB9hQBAB/madin-saleh-2560x1440.jpeg",
     budget: [1800, 4500],
   },
   {
@@ -59,7 +59,7 @@ const DESTS = [
     country: "Georgia",
     vibe: "city",
     clima: "mild",
-    img: "https://images.unsplash.com/photo-1521292270410-a8c0d1a8c4f6?q=80&w=2340&auto=format&fit=crop",
+    img: "https://www.advantour.com/img/georgia/images/tbilisi.jpg",
     budget: [2200, 5000],
   },
   {
@@ -68,7 +68,7 @@ const DESTS = [
     country: "Oman",
     vibe: "nature",
     clima: "cool",
-    img: "https://images.unsplash.com/photo-1577952943146-c1f9ea9f50b0?q=80&w=2340&auto=format&fit=crop",
+    img: "https://res.cloudinary.com/ddjuftfy2/image/upload/f_webp,c_fill,q_auto/memphis/xlarge/274158227_Salalah%20City.jpg",
     budget: [2500, 5200],
   },
 ];
@@ -117,29 +117,28 @@ export default function Smart() {
     <SafeAreaView style={s.safe}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
-          {/* Top App Bar (same structure as Home: brand + bell) */}
-          <View style={s.appbar}>
-            <Text style={s.brand}>
-              Riyadh V-aiR<Text style={{ color: COLORS.primary }}>.</Text>
-            </Text>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-              <TouchableOpacity
-                activeOpacity={0.7}
-                style={s.bell}
-                onPress={() =>
-                  Alert.alert(
-                    "What is Smart Booking?",
-                    "Tell us your budget, preferred weather, and vibe (nature or city), and we’ll suggest the perfect destination for you."
-                  )
-                }
-              >
-                <Ionicons name="information-outline" size={18} color={COLORS.text} />
-              </TouchableOpacity>
-              <TouchableOpacity activeOpacity={0.7} style={s.bell} onPress={() => router.push("/notifications")}>
-                <Ionicons name="notifications-outline" size={20} color={COLORS.text} />
-              </TouchableOpacity>
-            </View>
-          </View>
+          
+{/* Top App Bar */}
+
+<View style={[s.appbar, s.appbarEdge]}>
+          <Image
+            source={require("../../assets/images/Riyadh_Air_Logo.png")}
+            style={s.brandLogo}
+            resizeMode="contain"
+            accessibilityLabel="Riyadh Air"
+          />
+
+          {/* right-side icons... */}
+          <TouchableOpacity
+            activeOpacity={0.7}
+            style={s.bell}
+            onPress={() => router.push("/notifications")}
+          >
+            <Ionicons name="notifications-outline" size={20} color={COLORS.text} />
+          </TouchableOpacity>
+        </View>
+
+
 
           {/* Title */}
           <Text style={s.greeting}>Smart Booking</Text>
@@ -158,7 +157,7 @@ export default function Smart() {
                   <Ionicons name="cash-outline" size={18} color={COLORS.text} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={sb.label}>Budget (SAR)</Text>
+                  <Text style={sb.label}>Budget (﷼)</Text>
                   <TextInput
                     value={budget}
                     onChangeText={(t) => setBudget(sanitizeNum(t))}
@@ -286,10 +285,10 @@ export default function Smart() {
                     <MetaRow
                       icon="cash-outline"
                       label="Typical budget"
-                      value={`SAR ${pick.budget[0].toLocaleString()} – ${pick.budget[1].toLocaleString()}`}
+                      value={` ${pick.budget[0].toLocaleString()} – ${pick.budget[1].toLocaleString()} ﷼`}
                     />
                     {pick.budgetInput ? (
-                      <MetaRow icon="pricetag-outline" label="Your budget" value={`SAR ${pick.budgetInput}`} />
+                      <MetaRow icon="pricetag-outline" label="Your budget" value={`﷼ ${pick.budgetInput}`} />
                     ) : null}
                   </View>
 
@@ -393,6 +392,15 @@ const sanitizeNum = (t) => t.replace(/[^\d]/g, "");
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
   container: { padding: 16, paddingBottom: 130 },
+// app bar
+appbar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 },
+brand: { fontSize: 24, fontWeight: "800", color: COLORS.text },
+bell: { width: 36, height: 36, borderRadius: 12, backgroundColor: "#F1F2F6", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#EBEDF3" },
+brandLogo: {
+height: 42,
+width: 240,
+marginLeft: -60,  // tweak -6 to -14 depending on the file
+},
 
   // app bar
   appbar: {

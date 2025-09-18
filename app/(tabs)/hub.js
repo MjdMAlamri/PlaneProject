@@ -1,5 +1,5 @@
-// app/(tabs)/hub.js
-import React, { useMemo, useRef, useState, useCallback } from "react";
+import React, { useMemo, useRef, useState, useCallback, useEffect } from "react";
+import { useLocalSearchParams } from "expo-router";
 import {
   SafeAreaView,
   View,
@@ -11,12 +11,13 @@ import {
   Pressable,
   FlatList,
   Animated,
+  Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import BillboardCarousel from "../components/BillboardCarousel"; // app/(tabs) -> app/components
+import BillboardCarousel from "../components/BillboardCarousel";
 
-/** Theme (same as other pages) */
+/** Theme */
 const COLORS = {
   bg: "#F6F7FB",
   text: "#0F172A",
@@ -30,15 +31,24 @@ const COLORS = {
   accent: "#FFCE31",
 };
 
+/** Banner sizing - FIXED */
+const { width: screenWidth } = Dimensions.get('window');
+const BANNER_HORIZONTAL_PADDING = 16;  // padding from FlatList contentContainerStyle
+const BANNER_WIDTH = 300;  // Full width minus padding
+const BANNER_ASPECT = 16 / 3;;           // height = width / aspect
+
 const FALLBACK_IMG = "https://placehold.co/1200x800/jpg?text=Riyadh+Air";
-const FLAGS = { "Saudi Arabia": "🇸🇦", Japan: "🇯🇵", Oman: "🇴🇲", Georgia: "🇬🇪" };
+const FLAGS = { "Saudi Arabia": "🇸🇦", Japan: "🇯🇵", Oman: "🇴🇲", Georgia: "🇬🇪", "United Arab Emirates": "🇦🇪" };
 const flagOf = (c) => FLAGS[c] || "🏳️";
 
-/** Demo data */
+/** Country list (≤5) for the dropdown */
+const COUNTRIES = ["Japan", "Saudi Arabia", "Oman", "Georgia", "United Arab Emirates"];
+
+/** Demo data (Activities) */
 const DATA = [
   {
     id: "tokyo-teamlab",
-    title: "teamLab Planets (Immersive Art)",
+    title: "TeamLab Planets (Immersive Art)",
     city: "Tokyo",
     country: "Japan",
     type: "group",
@@ -46,7 +56,7 @@ const DATA = [
     capacity: 6,
     booked: 0,
     image:
-      "https://images.unsplash.com/photo-1563013544-824ae1b704d3?q=80&w=1600&auto=format&fit=crop",
+      "https://imagedelivery.net/b5EBo9Uo-OK6SM09ZTkEZQ/89JNH3JuCgHZcGbACeD2vU/width=3840,quality=80",
   },
   {
     id: "osaka-matcha",
@@ -58,7 +68,7 @@ const DATA = [
     capacity: 3,
     booked: 2,
     image:
-      "https://images.unsplash.com/photo-1541845153-9f1d8bfa9a93?q=80&w=1600&auto=format&fit=crop",
+      "https://cdn.shopify.com/s/files/1/0003/9596/8567/t/33/assets/tea-ceremony-tools-1689272217231.jpg?v=1689272218",
   },
   {
     id: "osaka-shuriken",
@@ -70,7 +80,60 @@ const DATA = [
     capacity: 5,
     booked: 5,
     image:
-      "https://images.unsplash.com/photo-1502877338535-766e1452684a?q=80&w=1600&auto=format&fit=crop",
+      "https://home.akihabara.kokosil.net/wp-content/uploads/2018/11/main.png",
+  },
+];
+
+/** Games: now with images to match the Activities look */
+const GAMES = [
+  {
+    id: "trivia",
+    title: "Overcooked 2",
+    players: "multiplayer",
+    rating: 4.8,
+    image:
+      "https://cdn1.epicgames.com/salesEvent/salesEvent/egs-overcooked2-Wide_2560x1440-808fbab09ed3ab49d6d0107683cbba8b?resize=1&w=480&h=270&quality=medium",
+  },
+  {
+    id: "word-hunt",
+    title: "Slither.io",
+    players: "solo",
+    rating: 4.6,
+    image:
+      "https://imgs.crazygames.com/games/slitherio/cover-1587331280441.png?format=auto&quality=100&metadata=none&width=1200",
+  },
+  {
+    id: "city-quiz",
+    title: "Fall Guys",
+    players: "multiplayer",
+    rating: 4.7,
+    image:
+      "https://platform.theverge.com/wp-content/uploads/sites/2/chorus/uploads/chorus_asset/file/23474062/fall_guys_free_to_play.jpg?quality=90&strip=all&crop=7.8125,0,84.375,100",
+  },
+];
+
+/** Banners for the top carousel when Games is active */
+const GAMES_BANNERS = [
+  {
+    id: "bnr-trivia",
+    title: "Overcooked 2",
+    subtitle: "Compete with passengers near you",
+    image:
+      "https://cdn1.epicgames.com/salesEvent/salesEvent/egs-overcooked2-Wide_2560x1440-808fbab09ed3ab49d6d0107683cbba8b?resize=1&w=480&h=270&quality=medium",
+  },
+  {
+    id: "bnr-word-hunt",
+    title: "Slither.io",
+    subtitle: "Quick solo challenges on board",
+    image:
+      "https://imgs.crazygames.com/games/slitherio/cover-1587331280441.png?format=auto&quality=100&metadata=none&width=1200",
+  },
+  {
+    id: "bnr-city-quiz",
+    title: "Fall Guys",
+    subtitle: "Guess landmarks before you land",
+    image:
+      "https://platform.theverge.com/wp-content/uploads/sites/2/chorus/uploads/chorus_asset/file/23474062/fall_guys_free_to_play.jpg?quality=90&strip=all&crop=7.8125,0,84.375,100",
   },
 ];
 
@@ -94,8 +157,18 @@ export default function HubActivities() {
   const [typeFilter, setTypeFilter] = useState(null);
   const [sortBy, setSortBy] = useState("recommended");
 
-  // which “pill” is active in the segmented bar
-  const [activeTab, setActiveTab] = useState("Activities");
+  // countries
+  const [countryOpen, setCountryOpen] = useState(false);
+  const [country, setCountry] = useState("Japan");
+
+  // tabs
+    const { tab } = useLocalSearchParams();
+    const [activeTab, setActiveTab] = useState(
+      (tab && String(tab).toLowerCase() === "games") ? "Games" : "Activities"
+   );
+    useEffect(() => {
+      if (tab) setActiveTab(String(tab).toLowerCase() === "games" ? "Games" : "Activities");
+    }, [tab]);
 
   // sheets
   const [showFilter, setShowFilter] = useState(false);
@@ -109,6 +182,7 @@ export default function HubActivities() {
   const filtered = useMemo(
     () =>
       items
+        .filter((it) => it.country === country)
         .filter((it) => {
           if (availability === "available" && spotsLeft(it) <= 0) return false;
           if (availability === "full" && spotsLeft(it) > 0) return false;
@@ -117,7 +191,7 @@ export default function HubActivities() {
           return true;
         })
         .sort(sorters[sortBy]),
-    [items, availability, minRating, typeFilter, sortBy]
+    [items, country, availability, minRating, typeFilter, sortBy]
   );
 
   const onAddToPlan = (id) => {
@@ -150,12 +224,7 @@ export default function HubActivities() {
         ))}
         {half && <Ionicons name="star-half" size={14} color={COLORS.accent} />}
         {Array.from({ length: 5 - full - (half ? 1 : 0) }).map((_, i) => (
-          <Ionicons
-            key={`o${i}`}
-            name="star-outline"
-            size={14}
-            color={COLORS.accent}
-          />
+          <Ionicons key={`o${i}`} name="star-outline" size={14} color={COLORS.accent} />
         ))}
         <Text style={st.ratingText}>{r.toFixed(1)}</Text>
       </View>
@@ -175,6 +244,7 @@ export default function HubActivities() {
           onError={() => setImgErr(true)}
         />
         {!imgOk && <View style={st.skelWrap} />}
+        <View pointerEvents="none" style={st.bannerEdgeMask} />
 
         <View style={st.cardTopRow}>
           <View style={st.typePill}>
@@ -190,16 +260,13 @@ export default function HubActivities() {
             disabled={spotsLeft(item) <= 0}
           >
             <Text style={st.signupText}>
-              {item.booked}/{item.capacity} |{" "}
-              {spotsLeft(item) > 0 ? "Add to Plan" : "Full"}
+              {item.booked}/{item.capacity} | {spotsLeft(item) > 0 ? "Add to Plan" : "Full"}
             </Text>
           </TouchableOpacity>
         </View>
 
         <View style={st.cardBottom}>
-          <Text numberOfLines={2} style={st.cardTitle}>
-            {item.title}
-          </Text>
+          <Text numberOfLines={2} style={st.cardTitle}>{item.title}</Text>
           <View style={st.locationRow}>
             <Ionicons name="location-outline" size={14} color="#fff" />
             <Text style={st.locationText}>
@@ -212,10 +279,96 @@ export default function HubActivities() {
     );
   };
 
-  /** Header (logo + billboard + segmented bar + tools underneath) */
+  /** Game card mirrors Activity card (with image) */
+  const GameRow = ({ item }) => {
+    const [imgErr, setImgErr] = useState(false);
+    return (
+      <View style={st.card}>
+        <Image
+          source={{ uri: imgErr ? FALLBACK_IMG : item.image }}
+          style={st.cardImage}
+          onError={() => setImgErr(true)}
+        />
+        <View pointerEvents="none" style={st.gradientMask} />
+
+        <View style={st.cardTopRow}>
+          <View style={st.typePill}>
+            <Text style={st.typePillText}>
+              {item.players === "multiplayer" ? "Group" : "Solo"}
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={[st.signupBtn, { backgroundColor: "rgba(255,255,255,0.92)" }]}
+            activeOpacity={0.9}
+            onPress={() => Toast.show("Launching game…")}
+          >
+            <Text style={[st.signupText, { color: COLORS.text }]}>Play</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={st.cardBottom}>
+          <Text numberOfLines={2} style={st.cardTitle}>{item.title}</Text>
+          <Text style={[st.locationText, { marginBottom: 6 }]}>
+            {item.players === "multiplayer" ? "Multiplayer" : "Solo"} • {item.rating.toFixed(1)}★
+          </Text>
+          {renderStars(item.rating)}
+        </View>
+      </View>
+    );
+  };
+
+  /** Country row: dropdown + inline filter/sort (same line) */
+  const CountryRow = (
+    <View style={st.countryRow}>
+      <TouchableOpacity
+        style={st.countryDropdown}
+        activeOpacity={0.9}
+        onPress={() => setCountryOpen((v) => !v)}
+      >
+        <Text style={st.countryDropdownText}>
+          {flagOf(country)} {country}
+        </Text>
+        <Ionicons name={countryOpen ? "chevron-up" : "chevron-down"} size={16} color={COLORS.text} />
+      </TouchableOpacity>
+
+      <View style={{ flexDirection: "row", gap: 10 }}>
+        <View>
+          <TouchableOpacity
+            onPress={() => {
+              setShowSort(false);
+              setShowFilter((v) => !v);
+            }}
+            style={st.iconBtn}
+            activeOpacity={0.9}
+          >
+            <Ionicons name="filter-outline" size={18} color={COLORS.text} />
+          </TouchableOpacity>
+          {filterActiveCount > 0 && (
+            <View style={st.dotBadge}>
+              <Text style={st.dotTxt}>{filterActiveCount}</Text>
+            </View>
+          )}
+        </View>
+
+        <TouchableOpacity
+          onPress={() => {
+            setShowFilter(false);
+            setShowSort((v) => !v);
+          }}
+          style={st.iconBtn}
+          activeOpacity={0.9}
+        >
+          <Ionicons name="swap-vertical-outline" size={18} color={COLORS.text} />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  /** Header */
   const Header = (
     <>
-      {/* App bar with Riyadh Air logo on the far left */}
+      {/* App bar */}
       <View style={st.appbar}>
         <Image
           source={require("../../assets/images/Riyadh_Air_Logo.png")}
@@ -224,38 +377,34 @@ export default function HubActivities() {
           accessibilityLabel="Riyadh Air"
         />
         <View style={{ flexDirection: "row", gap: 8 }}>
-          <TouchableOpacity
-            style={st.bell}
-            onPress={() =>
-              Alert.alert(
-                "Hub",
-                "Discover activities and in-flight games. Save favorites and add them to your trip."
-              )
-            }
-          >
-            <Ionicons
-              name="information-outline"
-              size={18}
-              color={COLORS.text}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={st.bell}
-            onPress={() => router.push("/notifications")}
-          >
+          <TouchableOpacity style={st.bell} onPress={() => router.push("/notifications")}>
             <Ionicons name="notifications-outline" size={20} color={COLORS.text} />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Featured billboard (top picks from current filters) */}
-      <BillboardCarousel
-        type="activity"
-        data={filtered.slice(0, 3)}
-        onPressPrimary={(item) => onAddToPlan(item.id)}
-      />
+      {/* Section title */}
+      <Text style={st.sectionTitle}>
+        {activeTab === "Activities" ? "Recommended activities for you" : "Featured in-flight games"}
+      </Text>
 
-      {/* Segmented tabs — EXACT “pill” look */}
+      {/* FIXED: Banner wrapper with proper padding */}
+      <View style={st.bannerWrap}>
+        <BillboardCarousel
+          data={activeTab === "Activities" ? filtered.slice(0, 3) : GAMES_BANNERS}
+          onPressPrimary={
+            activeTab === "Activities"
+              ? (item) => onAddToPlan(item.id)
+              : () => Toast.show("Launching game…")
+          }
+          autoplay
+          loop
+          imageAspectRatio={300}
+          cardStyle={[st.bannerCard, { width: 300 }]}
+        />
+      </View>
+
+      {/* Tabs */}
       <View style={st.segWrap}>
         <View style={st.segTrack}>
           <TouchableOpacity
@@ -263,108 +412,88 @@ export default function HubActivities() {
             style={[st.segBtn, activeTab === "Activities" && st.segBtnActive]}
             activeOpacity={0.9}
           >
-            <Text
-              style={[st.segTxt, activeTab === "Activities" && st.segTxtActive]}
-            >
+            <Text style={[st.segTxt, activeTab === "Activities" && st.segTxtActive]}>
               Activities
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => router.replace("/game")}
+            onPress={() => setActiveTab("Games")}
             style={[st.segBtn, activeTab === "Games" && st.segBtnActive]}
             activeOpacity={0.9}
           >
-            <Text
-              style={[st.segTxt, activeTab === "Games" && st.segTxtActive]}
-            >
+            <Text style={[st.segTxt, activeTab === "Games" && st.segTxtActive]}>
               In-flight games
             </Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Tools row UNDER the segmented bar — only on Activities */}
-      {activeTab === "Activities" && (
-        <View style={st.toolsRow}>
-          <View>
+      {/* Country + inline tools (Activities only) */}
+      {activeTab === "Activities" && CountryRow}
+
+      {/* Country dropdown menu */}
+      {activeTab === "Activities" && countryOpen && (
+        <View style={st.countryMenu}>
+          {COUNTRIES.map((c) => (
             <TouchableOpacity
+              key={c}
+              style={st.countryMenuItem}
+              activeOpacity={0.85}
               onPress={() => {
-                setShowSort(false);
-                setShowFilter((v) => !v);
+                setCountry(c);
+                setCountryOpen(false);
               }}
-              style={st.iconBtn}
-              activeOpacity={0.9}
             >
-              <Ionicons name="filter-outline" size={18} color={COLORS.text} />
+              <Text style={st.countryMenuText}>
+                {flagOf(c)} {c}
+              </Text>
+              {country === c && <Ionicons name="checkmark" size={16} color={COLORS.primary} />}
             </TouchableOpacity>
-            {filterActiveCount > 0 && (
-              <View style={st.dotBadge}>
-                <Text style={st.dotTxt}>{filterActiveCount}</Text>
-              </View>
-            )}
-          </View>
-          <TouchableOpacity
-            onPress={() => {
-              setShowFilter(false);
-              setShowSort((v) => !v);
-            }}
-            style={st.iconBtn}
-            activeOpacity={0.9}
-          >
-            <Ionicons
-              name="swap-vertical-outline"
-              size={18}
-              color={COLORS.text}
-            />
-          </TouchableOpacity>
+          ))}
         </View>
       )}
-
-      {/* Country */}
-      <Text style={st.country}>Japan</Text>
-      <View
-        style={[st.panel, { paddingTop: 10, paddingBottom: 6, marginBottom: 12 }]}
-      />
     </>
   );
+
+  const listData = activeTab === "Activities" ? filtered : GAMES;
+  const listRenderer =
+    activeTab === "Activities" ? ({ item }) => <ActivityCard item={item} /> : ({ item }) => <GameRow item={item} />;
 
   return (
     <SafeAreaView style={st.safe}>
       <FlatList
-        data={filtered}
+        data={listData}
         keyExtractor={keyExtractor}
-        renderItem={({ item }) => <ActivityCard item={item} />}
-        contentContainerStyle={{
-          paddingHorizontal: 16,
-          paddingBottom: 140,
-          gap: 12,
-        }}
+        renderItem={listRenderer}
+        contentContainerStyle={{ paddingHorizontal: BANNER_HORIZONTAL_PADDING, paddingBottom: 140, gap: 12 }}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={Header}
         ListEmptyComponent={
           <View style={[st.panel, { marginTop: -6 }]}>
             <Text style={{ color: COLORS.text, fontWeight: "800", marginBottom: 6 }}>
-              No activities match your filters.
+              No items match your filters.
             </Text>
             <Text style={{ color: COLORS.muted, marginBottom: 10 }}>
               Try clearing filters or switching tabs.
             </Text>
-            <TouchableOpacity
-              onPress={() => {
-                setAvailability(null);
-                setMinRating(null);
-                setTypeFilter(null);
-              }}
-              style={st.clearBtn}
-            >
-              <Text style={st.clearTxt}>Clear filters</Text>
-            </TouchableOpacity>
+            {activeTab === "Activities" && (
+              <TouchableOpacity
+                onPress={() => {
+                  setAvailability(null);
+                  setMinRating(null);
+                  setTypeFilter(null);
+                }}
+                style={st.clearBtn}
+              >
+                <Text style={st.clearTxt}>Clear filters</Text>
+              </TouchableOpacity>
+            )}
           </View>
         }
         removeClippedSubviews
         windowSize={8}
-        getItemLayout={getItemLayout}
+        getItemLayout={activeTab === "Activities" ? getItemLayout : undefined}
       />
 
       {/* Filter sheet */}
@@ -378,16 +507,12 @@ export default function HubActivities() {
               <Chip
                 label="Available"
                 active={availability === "available"}
-                onPress={() =>
-                  setAvailability((v) => (v === "available" ? null : "available"))
-                }
+                onPress={() => setAvailability((v) => (v === "available" ? null : "available"))}
               />
               <Chip
                 label="Full"
                 active={availability === "full"}
-                onPress={() =>
-                  setAvailability((v) => (v === "full" ? null : "full"))
-                }
+                onPress={() => setAvailability((v) => (v === "full" ? null : "full"))}
               />
             </View>
 
@@ -408,16 +533,12 @@ export default function HubActivities() {
               <Chip
                 label="Solo"
                 active={typeFilter === "solo"}
-                onPress={() =>
-                  setTypeFilter((t) => (t === "solo" ? null : "solo"))
-                }
+                onPress={() => setTypeFilter((t) => (t === "solo" ? null : "solo"))}
               />
               <Chip
                 label="Group"
                 active={typeFilter === "group"}
-                onPress={() =>
-                  setTypeFilter((t) => (t === "group" ? null : "group"))
-                }
+                onPress={() => setTypeFilter((t) => (t === "group" ? null : "group"))}
               />
             </View>
           </Pressable>
@@ -429,21 +550,9 @@ export default function HubActivities() {
         <Pressable style={st.sheetOverlay} onPress={() => setShowSort(false)}>
           <Pressable style={st.sheet}>
             <Text style={st.sheetTitle}>Sort by</Text>
-            <SortRow
-              label="Rating: Low → High"
-              active={sortBy === "rating_asc"}
-              onPress={() => setSortBy("rating_asc")}
-            />
-            <SortRow
-              label="Rating: High → Low"
-              active={sortBy === "rating_desc"}
-              onPress={() => setSortBy("rating_desc")}
-            />
-            <SortRow
-              label="Recommended"
-              active={sortBy === "recommended"}
-              onPress={() => setSortBy("recommended")}
-            />
+            <SortRow label="Rating: Low → High" active={sortBy === "rating_asc"} onPress={() => setSortBy("rating_asc")} />
+            <SortRow label="Rating: High → Low" active={sortBy === "rating_desc"} onPress={() => setSortBy("rating_desc")} />
+            <SortRow label="Recommended" active={sortBy === "recommended"} onPress={() => setSortBy("recommended")} />
           </Pressable>
         </Pressable>
       )}
@@ -451,28 +560,17 @@ export default function HubActivities() {
       {/* Toast */}
       <Toast.Slot />
 
-      {/* Bottom nav (Hub highlighted) */}
+      {/* Bottom nav */}
       <View style={st.tabbar}>
-        <TabIcon
-          icon={<Ionicons name="home" size={22} color="#666" />}
-          label="Home"
-          onPress={() => router.push("/index")}
-        />
-        <TabIcon
-          icon={<Ionicons name="airplane-outline" size={22} color="#666" />}
-          label="Trips"
-          onPress={() => router.push("/Trips")}
-        />
+        <TabIcon icon={<Ionicons name="home" size={22} color="#666" />} label="Home" onPress={() => router.push("/")} />
+        <TabIcon icon={<Ionicons name="airplane-outline" size={22} color="#666" />} label="Trips" onPress={() => router.push("/Trips")} />
         <TabIcon
           active
           icon={<Ionicons name="apps-outline" size={22} color={COLORS.text} />}
           label="Hub"
+          onPress={() => router.push("/hub")}
         />
-        <TabIcon
-          icon={<Ionicons name="person-outline" size={22} color="#666" />}
-          label="Profile"
-          onPress={() => router.push("/profile")}
-        />
+        <TabIcon icon={<Ionicons name="person-outline" size={22} color="#666" />} label="Profile" onPress={() => router.push("/Profile")} />
       </View>
     </SafeAreaView>
   );
@@ -557,7 +655,25 @@ const st = StyleSheet.create({
     borderWidth: 1, borderColor: "#EBEDF3",
   },
 
-  /* Segmented bar (pill) */
+  sectionTitle: {
+    paddingHorizontal: 16,
+    color: COLORS.text,
+    fontWeight: "900",
+    fontSize: 16,
+    marginBottom: 10,
+  },
+
+  /* FIXED: Banner wrapper - removed paddingHorizontal since we handle it in FlatList */
+  bannerWrap: {
+    marginBottom: 10,
+  },
+  bannerCard: {
+    borderRadius: 16,
+    overflow: "hidden",
+    width:300
+  },
+
+  /* Segmented bar */
   segWrap: { paddingHorizontal: 16, marginTop: 6 },
   segTrack: {
     flexDirection: "row",
@@ -578,14 +694,48 @@ const st = StyleSheet.create({
   segTxt: { fontWeight: "800", color: COLORS.text, fontSize: 13 },
   segTxtActive: { color: "#fff" },
 
-  /* Tools row UNDER the tabs */
-  toolsRow: {
+  /* Country row: dropdown + inline tools */
+  countryRow: {
     paddingHorizontal: 16,
-    marginTop: 8,
+    marginTop: 10,
     marginBottom: 6,
     flexDirection: "row",
-    gap: 10,
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
   },
+  countryDropdown: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: '#EFEFEF',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: COLORS.primaryBorder, 
+  },
+  countryDropdownText: { color: COLORS.text, fontWeight: "900" },
+
+  countryMenu: {
+    marginHorizontal: 16,
+    backgroundColor: '#E9ECFF',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    paddingVertical: 6,
+    marginBottom: 8,
+  },
+  countryMenuItem: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  countryMenuText: { color: COLORS.text, fontWeight: "800" },
+
+  /* Tools (icons) */
   iconBtn: {
     width: 36, height: 36, borderRadius: 12,
     alignItems: "center", justifyContent: "center",
@@ -600,11 +750,6 @@ const st = StyleSheet.create({
   },
   dotTxt: { color: "#fff", fontSize: 10, fontWeight: "800" },
 
-  country: {
-    marginLeft: 16, marginBottom: 8,
-    color: COLORS.text, fontSize: 16, fontWeight: "800",
-  },
-
   panel: {
     backgroundColor: COLORS.panel,
     borderRadius: 16,
@@ -618,22 +763,36 @@ const st = StyleSheet.create({
     elevation: 2,
   },
 
+  bannerEdgeMask: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 1,
+    backgroundColor: "transparent",
+  },
+
+  gradientMask: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.18)",
+  },
+  
   /* Sheets */
   sheetOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.2)",
     zIndex: 99,
     alignItems: "center",
-    justifyContent: "flex-start",
-    paddingTop: 10,
+    justifyContent: "center",
   },
   sheet: {
     width: "92%",
     backgroundColor: COLORS.panel,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: '#DADFFE',
     padding: 12,
+    maxHeight: "70%",
   },
   sheetTitle: { fontSize: 16, fontWeight: "800", color: COLORS.text, marginBottom: 8 },
   sheetSection: { fontSize: 12, fontWeight: "800", color: COLORS.muted, marginTop: 8, marginBottom: 4 },
@@ -657,7 +816,7 @@ const st = StyleSheet.create({
   },
   sortLabel: { color: COLORS.text, fontWeight: "800" },
 
-  /* Cards */
+  /* Cards (Activities & Games) */
   card: {
     height: 180,
     borderRadius: 16,
@@ -700,7 +859,7 @@ const st = StyleSheet.create({
   cardBottom: { position: "absolute", left: 12, right: 12, bottom: 10, zIndex: 2 },
   cardTitle: { color: "#FFF", fontWeight: "900", fontSize: 16, marginBottom: 6 },
   locationRow: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 6 },
-  locationText: { color: "#FFF", fontWeight: "700" },
+  locationText: { color: "#fff", fontWeight: "700" },
   ratingText: {
     color: "#FFF",
     fontWeight: "800",

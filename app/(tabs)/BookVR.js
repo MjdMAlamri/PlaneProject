@@ -7,6 +7,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  Image,
   Dimensions,
   Alert,
 } from "react-native";
@@ -81,7 +82,7 @@ Headset: ${headset}
 Time slot: ${slot}
 Activities: ${activities.join(", ")}
 
-Total: $${price.toFixed(2)}`,
+Total: $﷼{price.toFixed(2)}`,
       [{ text: "Done", onPress: () => router.back() }]
     );
   };
@@ -89,6 +90,29 @@ Total: $${price.toFixed(2)}`,
   return (
     <SafeAreaView style={s.safe}>
       <ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
+
+        {/* Top App Bar */}
+
+        <View style={[s.appbar, s.appbarEdge]}>
+          <Image
+            source={require("../../assets/images/Riyadh_Air_Logo.png")}
+            style={s.brandLogo}
+            resizeMode="contain"
+            accessibilityLabel="Riyadh Air"
+          />
+
+          {/* right-side icons... */}
+          <TouchableOpacity
+            activeOpacity={0.7}
+            style={s.bell}
+            onPress={() => router.push("/notifications")}
+          >
+            <Ionicons name="notifications-outline" size={20} color={COLORS.text} />
+          </TouchableOpacity>
+        </View>
+
+
+
         {/* Header / Hero */}
         <LinearGradient
           colors={[COLORS.dark, "#0E0E10"]}
@@ -159,7 +183,7 @@ Total: $${price.toFixed(2)}`,
               <Text style={s.summaryLead}>Total</Text>
               <Text style={s.summarySub}>Taxes & fees included</Text>
             </View>
-            <Text style={s.summaryAmt}>${price.toFixed(2)}</Text>
+            <Text style={s.summaryAmt}>{price.toFixed(2)}﷼</Text>
           </View>
 
           <TouchableOpacity style={s.cta} activeOpacity={0.9} onPress={submit}>
@@ -187,7 +211,7 @@ Total: $${price.toFixed(2)}`,
         <TabIcon
           icon={<Ionicons name="apps-outline" size={22} color="#666" />}
           label="Hub"
-          onPress={() => router.push("/Hub")}
+          onPress={() => router.push("/hub")}
         />
         <TabIcon
           icon={<Ionicons name="person-outline" size={22} color="#666" />}
@@ -227,7 +251,7 @@ function ChipRow({ label, value, options, prices = {}, onSelect }) {
         {options.map((opt) => {
           const active = value === opt;
           const p = prices[opt] ?? 0;
-          const priceText = p > 0 ? `+$${p}` : "+$0";
+          const priceText = p > 0 ? `+$0﷼` : "+0﷼";
           return (
             <TouchableOpacity
               key={opt}
@@ -271,6 +295,15 @@ function ActivityTile({ title, subtitle, icon, active, onPress }) {
 
 /* ---------- Styles ---------- */
 const s = StyleSheet.create({
+  // app bar
+  appbar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 },
+  brand: { fontSize: 24, fontWeight: "800", color: COLORS.text },
+  bell: { width: 36, height: 36, borderRadius: 12, backgroundColor: "#F1F2F6", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#EBEDF3" },
+ brandLogo: {
+  height: 42,
+  width: 240,
+  marginLeft: -60,  // tweak -6 to -14 depending on the file
+  },
   safe: { flex: 1, backgroundColor: COLORS.bg },
   container: { padding: 16, paddingBottom: 120 },
 

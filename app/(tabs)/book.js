@@ -6,6 +6,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  Image,
   Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -218,7 +219,7 @@ Passengers: ${passengers}
 Cabin: ${cabin}
 Extras: ${extras.join(", ")}
 
-Estimated from $${estimateTotal}`,
+Estimated from $﷼{estimateTotal}`,
     [
       {
         text: "Continue",
@@ -237,6 +238,28 @@ Estimated from $${estimateTotal}`,
   return (
     <SafeAreaView style={s.safe}>
       <ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
+    
+
+{/* Top App Bar */}
+<View style={[s.appbar, s.appbarEdge]}>
+          <Image
+            source={require("../../assets/images/Riyadh_Air_Logo.png")}
+            style={s.brandLogo}
+            resizeMode="contain"
+            accessibilityLabel="Riyadh Air"
+          />
+
+          {/* right-side icons... */}
+          <TouchableOpacity
+            activeOpacity={0.7}
+            style={s.bell}
+            onPress={() => router.push("/notifications")}
+          >
+            <Ionicons name="notifications-outline" size={20} color={COLORS.text} />
+          </TouchableOpacity>
+        </View>
+
+        
         {/* Hero */}
         <LinearGradient
           colors={[COLORS.primarySoft1, COLORS.primarySoft2]}
@@ -247,7 +270,6 @@ Estimated from $${estimateTotal}`,
           <Text style={s.heroTitle}>Flight Booking</Text>
           <Text style={s.heroSub}>Plan your flight and trip in one flow.</Text>
         </LinearGradient>
-
         {/* From / To */}
         <View style={s.card}>
           <View style={s.sectionHeaderRow}>
@@ -311,7 +333,7 @@ Estimated from $${estimateTotal}`,
             <Text style={s.sectionTitle}>Travelers & Cabin</Text>
             <View style={{ flex: 1 }} />
             <View style={s.priceBadge}>
-              <Text style={s.priceBadgeTop}>${perPax}</Text>
+              <Text style={s.priceBadgeTop}>﷼{perPax}</Text>
               <Text style={s.priceBadgeSub}>per passenger</Text>
             </View>
           </View>
@@ -327,14 +349,14 @@ Estimated from $${estimateTotal}`,
           <ChipRow
             label="Cabin class"
             value={cabin}
-            options={["Economy", "Premium", "Business", "First"]}
+            options={["Economy","Business", "First"]}
             onSelect={setCabin}
-            priceGetter={(opt) => `$${pricePerPaxForCabin(opt)}`}
+            priceGetter={(opt) => `﷼${pricePerPaxForCabin(opt)}`}
           />
 
           <View style={s.subtotalRow}>
             <Text style={s.subtotalLabel}>Flight subtotal</Text>
-            <Text style={s.subtotalValue}>${flightSubtotal}</Text>
+            <Text style={s.subtotalValue}>﷼{flightSubtotal}</Text>
           </View>
         </View>
 
@@ -350,7 +372,7 @@ Estimated from $${estimateTotal}`,
               title="Seat selection"
               subtitle="Choose seats together"
               icon="grid-outline"
-              priceLabel="+$8"
+              priceLabel="﷼8"
               active={extras.includes("Seat selection")}
               onPress={() => toggleExtra("Seat selection")}
             />
@@ -358,7 +380,7 @@ Estimated from $${estimateTotal}`,
               title="Fast security"
               subtitle="Skip long lines where available"
               icon="flash-outline"
-              priceLabel="+$8"
+              priceLabel="﷼8"
               active={extras.includes("Fast security")}
               onPress={() => toggleExtra("Fast security")}
             />
@@ -366,7 +388,7 @@ Estimated from $${estimateTotal}`,
               title="Extra bag"
               subtitle="Add 1 checked bag"
               icon="briefcase-outline"
-              priceLabel="+$8"
+              priceLabel="﷼8"
               active={extras.includes("Extra bag")}
               onPress={() => toggleExtra("Extra bag")}
             />
@@ -374,7 +396,7 @@ Estimated from $${estimateTotal}`,
               title="VR booking"
               subtitle="In-flight VR experience"
               icon="eye-outline"
-              priceLabel="From $20"
+              priceLabel="From ﷼75"
               info
               onInfo={() =>
                 Alert.alert(
@@ -399,22 +421,22 @@ Estimated from $${estimateTotal}`,
             <Text style={s.sectionTitle}>Price breakdown</Text>
           </View>
 
-          <BreakdownRow label="Base fare (one-way per pax)" value={`$${BASE_ONE_WAY}`} />
+          <BreakdownRow label="Base fare (one-way per pax)" value={`${BASE_ONE_WAY}﷼`} />
           <BreakdownRow
             label={`Trip type (${trip === "Round trip" ? "×1.8" : "×1.0"})`}
-            value={`$${Math.round(BASE_ONE_WAY * TRIP_MUL - BASE_ONE_WAY)}`}
+            value={`${Math.round(BASE_ONE_WAY * TRIP_MUL - BASE_ONE_WAY)}﷼`}
             muted
           />
           <BreakdownRow
             label={`Cabin class (${cabin}, ×${CABIN_MUL})`}
-            value={`$${Math.round(BASE_ONE_WAY * TRIP_MUL * CABIN_MUL - BASE_ONE_WAY * TRIP_MUL)}`}
+            value={`${Math.round(BASE_ONE_WAY * TRIP_MUL * CABIN_MUL - BASE_ONE_WAY * TRIP_MUL)}﷼`}
             muted
           />
-          <BreakdownRow label={`Subtotal per passenger`} value={`$${perPax}`} />
-          <BreakdownRow label={`Passengers × ${passengers}`} value={`$${flightSubtotal}`} />
-          <BreakdownRow label={`Add-ons`} value={`$${addOnsCost}`} />
+          <BreakdownRow label={`Subtotal per passenger`} value={`${perPax}﷼`} />
+          <BreakdownRow label={`Passengers × ${passengers}`} value={`${flightSubtotal}﷼`} />
+          <BreakdownRow label={`Add-ons`} value={`${addOnsCost}﷼`} />
           <View style={s.divider} />
-          <BreakdownRow label="Estimated total" value={`$${estimateTotal}`} bold />
+          <BreakdownRow label="Estimated total" value={`${estimateTotal}﷼`} bold />
         </View>
 
         {/* Summary / CTA */}
@@ -424,7 +446,7 @@ Estimated from $${estimateTotal}`,
               <Text style={s.summaryLead}>Estimated total</Text>
               <Text style={s.summarySub}>Before taxes & carrier fees</Text>
             </View>
-            <Text style={s.summaryAmt}>${estimateTotal}</Text>
+            <Text style={s.summaryAmt}>{estimateTotal}﷼</Text>
           </View>
 
           <TouchableOpacity style={s.cta} activeOpacity={0.9} onPress={search}>
@@ -467,6 +489,15 @@ Estimated from $${estimateTotal}`,
 
 /* -------- styles -------- */
 const s = StyleSheet.create({
+  // app bar
+  appbar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 },
+  brand: { fontSize: 24, fontWeight: "800", color: COLORS.text },
+  bell: { width: 36, height: 36, borderRadius: 12, backgroundColor: "#F1F2F6", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#EBEDF3" },
+  brandLogo: {
+    height: 42,
+    width: 240,
+    marginLeft: -60,  // tweak -6 to -14 depending on the file
+    },
   // tab bar
   tabbar: {
     position: "absolute",
